@@ -576,13 +576,24 @@ Napisz raport w formacie Markdown zawierający dokładnie 7 sekcji:
 
 WAŻNE: Wszystkie informacje muszą być samowystarczalne. Zero przekierowań do innych stron. Użyj alertów GitHub (> [!NOTE], > [!TIP]).
 """
-            model_name = getattr(config, "GEMINI_GENERATION_MODEL", "gemini-2.5-flash")
+            model_name = getattr(config, "GEMINI_GENERATION_MODEL", "gemini-3.8-flash")
+            thinking_lvl = getattr(config, "GEMINI_THINKING_LEVEL", "high")
+            gen_config = types.GenerateContentConfig(
+                thinking_config=types.ThinkingConfig(thinking_level=thinking_lvl)
+            )
             response_stream = gemini_client.models.generate_content_stream(
                 model=model_name,
-                contents=prompt_context
+                contents=prompt_context,
+                config=gen_config
             )
             for chunk in response_stream:
-                if chunk.text:
+                if chunk.candidates and chunk.candidates[0].content and chunk.candidates[0].content.parts:
+                    for part in chunk.candidates[0].content.parts:
+                        if getattr(part, "thought", False) and part.text:
+                            yield emit("thought", {"thought": part.text}, step_id=step_id)
+                        elif part.text:
+                            yield emit("final_markdown_delta", {"delta": part.text}, step_id=step_id)
+                elif chunk.text:
                     yield emit("final_markdown_delta", {"delta": chunk.text}, step_id=step_id)
             synthesis_done = True
         except Exception as e_stream:

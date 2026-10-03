@@ -109,6 +109,7 @@ def index():
         "name": "HackYeah 2026 - Flask ChromaDB API",
         "status": "online",
         "embedding_model": config.GEMINI_EMBEDDING_MODEL,
+        "generation_model": f"{config.GEMINI_GENERATION_MODEL} (thinking: {config.GEMINI_THINKING_LEVEL})",
         "auth_enabled": bool(config.API_AUTH_KEY),
         "security": {
             "rate_limit": config.RATE_LIMIT_DEFAULT,
@@ -196,6 +197,7 @@ def health():
             "status": "healthy",
             "chroma_storage": config.CHROMA_PERSIST_DIRECTORY,
             "embedding_model": config.GEMINI_EMBEDDING_MODEL,
+            "generation_model": f"{config.GEMINI_GENERATION_MODEL} (thinking: {config.GEMINI_THINKING_LEVEL})",
             "gemini_api_key_configured": has_api_key,
             "auth_enabled": bool(config.API_AUTH_KEY),
             "admin_auth_enabled": bool(config.ADMIN_API_KEY),
