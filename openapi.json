@@ -1,0 +1,668 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "HackYeah 2026 - Flask ChromaDB Vector API",
+    "description": "Production-ready REST API for Chroma DB vector database with custom Google Gemini embeddings.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000",
+      "description": "Local development server"
+    },
+    {
+      "url": "/",
+      "description": "Current host"
+    }
+  ],
+  "tags": [
+    { "name": "System", "description": "Health and system diagnostics" },
+    { "name": "Collections", "description": "Chroma DB collection management" },
+    { "name": "Documents", "description": "Document ingestion, retrieval, update, and deletion" },
+    { "name": "Query", "description": "Semantic similarity vector search" }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "tags": ["System"],
+        "summary": "API root info",
+        "description": "Returns basic API metadata, active embedding model, and endpoint map.",
+        "responses": {
+          "200": {
+            "description": "Service information",
+            "content": {
+              "application/json": {
+                "example": {
+                  "name": "HackYeah 2026 - Flask ChromaDB API",
+                  "status": "online",
+                  "embedding_model": "gemini-embedding-001",
+                  "mock_mode": false,
+                  "docs": {
+                    "health": "GET /health",
+                    "swagger_ui": "GET /docs",
+                    "openapi_spec": "GET /openapi.json",
+                    "list_collections": "GET /api/collections",
+                    "create_collection": "POST /api/collections",
+                    "get_collection": "GET /api/collections/<collection_name>",
+                    "delete_collection": "DELETE /api/collections/<collection_name>",
+                    "add_documents": "POST /api/documents",
+                    "update_documents": "PUT /api/documents",
+                    "upsert_documents": "POST /api/documents/upsert",
+                    "get_documents": "GET /api/documents",
+                    "delete_documents": "DELETE /api/documents",
+                    "query": "POST /api/query"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Health check",
+        "description": "Checks Chroma DB connectivity, storage status, and Gemini API key readiness.",
+        "responses": {
+          "200": {
+            "description": "System is healthy",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "healthy",
+                  "chroma_storage": "/app/chroma_data",
+                  "gemini_api_key_configured": true,
+                  "mock_embeddings_enabled": false,
+                  "collections_count": 1
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Service unhealthy",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "unhealthy",
+                  "error": "Failed to connect to storage."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/collections": {
+      "get": {
+        "tags": ["Collections"],
+        "summary": "List all collections",
+        "description": "Returns a list of all collections with metadata and record counts.",
+        "responses": {
+          "200": {
+            "description": "List of collections",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "success",
+                  "collections": [
+                    {
+                      "name": "hackyeah_docs",
+                      "count": 42,
+                      "metadata": { "hnsw:space": "cosine" }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Collections"],
+        "summary": "Create a new collection",
+        "description": "Explicitly creates a collection with optional custom metadata.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCollectionRequest"
+              },
+              "example": {
+                "name": "project_documentation",
+                "metadata": { "department": "engineering" }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Collection created successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "success",
+                  "message": "Collection 'project_documentation' created successfully.",
+                  "collection": {
+                    "name": "project_documentation",
+                    "count": 0,
+                    "metadata": { "hnsw:space": "cosine", "department": "engineering" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid collection name or already exists",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "error",
+                  "message": "Collection project_documentation already exists."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/collections/{collection_name}": {
+      "get": {
+        "tags": ["Collections"],
+        "summary": "Get collection details",
+        "parameters": [
+          {
+            "name": "collection_name",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Name of the collection"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Collection details",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "success",
+                  "collection": {
+                    "name": "project_documentation",
+                    "count": 5,
+                    "metadata": { "hnsw:space": "cosine" }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Collection not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Collections"],
+        "summary": "Delete a collection",
+        "parameters": [
+          {
+            "name": "collection_name",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Name of the collection to delete"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Collection deleted",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "success",
+                  "message": "Collection 'project_documentation' deleted successfully."
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error deleting collection"
+          }
+        }
+      }
+    },
+    "/api/documents": {
+      "get": {
+        "tags": ["Documents"],
+        "summary": "Retrieve documents",
+        "description": "Retrieve documents by comma-separated IDs or list with pagination.",
+        "parameters": [
+          {
+            "name": "ids",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Comma-separated list of document IDs (e.g. doc-1,doc-2)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 10 },
+            "description": "Maximum number of documents to return"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 0 },
+            "description": "Pagination offset"
+          },
+          {
+            "name": "collection_name",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Target collection name (defaults to configured default)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retrieved documents",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "success",
+                  "collection": "hackyeah_docs",
+                  "data": {
+                    "ids": ["doc-1"],
+                    "documents": ["Text content"],
+                    "metadatas": [{ "category": "event" }]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Documents"],
+        "summary": "Ingest new documents",
+        "description": "Embeds and stores documents in the vector database.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddDocumentsRequest"
+              },
+              "example": {
+                "documents": [
+                  "HackYeah 2026 is Europe's largest offline hackathon in Krakow.",
+                  "ChromaDB is a developer-friendly vector database."
+                ],
+                "metadatas": [
+                  { "category": "event", "city": "Krakow" },
+                  { "category": "database", "type": "vector" }
+                ],
+                "ids": ["doc-1", "doc-2"],
+                "collection_name": "hackyeah_docs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Documents added successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "success",
+                  "collection": "hackyeah_docs",
+                  "added_count": 2,
+                  "ids": ["doc-1", "doc-2"]
+                }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "500": { "description": "Server or embedding error" }
+        }
+      },
+      "put": {
+        "tags": ["Documents"],
+        "summary": "Edit / update existing records",
+        "description": "Updates text content, metadata, or both for existing document IDs. Automatically re-indexes embeddings when text changes.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDocumentsRequest"
+              },
+              "example": {
+                "ids": ["doc-1"],
+                "documents": ["Updated text content for HackYeah."],
+                "metadatas": [{ "category": "event", "verified": true }],
+                "collection_name": "hackyeah_docs",
+                "upsert": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Records updated successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "success",
+                  "action": "updated",
+                  "collection": "hackyeah_docs",
+                  "ids": ["doc-1"]
+                }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "500": { "description": "Update failure" }
+        }
+      },
+      "delete": {
+        "tags": ["Documents"],
+        "summary": "Delete documents",
+        "description": "Deletes documents from the collection by ID.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteDocumentsRequest"
+              },
+              "example": {
+                "ids": ["doc-1"],
+                "collection_name": "hackyeah_docs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Documents deleted",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "success",
+                  "collection": "hackyeah_docs",
+                  "deleted_ids": ["doc-1"]
+                }
+              }
+            }
+          },
+          "400": { "description": "Missing IDs" }
+        }
+      }
+    },
+    "/api/documents/upsert": {
+      "post": {
+        "tags": ["Documents"],
+        "summary": "Upsert documents",
+        "description": "Inserts records if missing, or updates them if they already exist.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertDocumentsRequest"
+              },
+              "example": {
+                "ids": ["doc-1", "doc-3"],
+                "documents": [
+                  "HackYeah 2026 Tauron Arena Krakow.",
+                  "New document content."
+                ],
+                "metadatas": [
+                  { "category": "event" },
+                  { "category": "general" }
+                ],
+                "collection_name": "hackyeah_docs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Documents upserted",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "success",
+                  "action": "upserted",
+                  "collection": "hackyeah_docs",
+                  "ids": ["doc-1", "doc-3"]
+                }
+              }
+            }
+          },
+          "400": { "description": "Validation error" }
+        }
+      }
+    },
+    "/api/query": {
+      "post": {
+        "tags": ["Query"],
+        "summary": "Semantic vector search",
+        "description": "Executes semantic similarity search against the vector database using Gemini embeddings.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QueryRequest"
+              },
+              "example": {
+                "query": "Where does the big hackathon happen?",
+                "n_results": 3,
+                "where": { "category": "event" },
+                "collection_name": "hackyeah_docs"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Semantic query results",
+            "content": {
+              "application/json": {
+                "example": {
+                  "status": "success",
+                  "collection": "hackyeah_docs",
+                  "results": [
+                    {
+                      "query": "Where does the big hackathon happen?",
+                      "matches": [
+                        {
+                          "id": "doc-1",
+                          "document": "HackYeah 2026 is Europe's largest offline hackathon in Krakow.",
+                          "metadata": { "category": "event", "city": "Krakow" },
+                          "distance": 0.0821
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": { "description": "Missing query or invalid parameters" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "API key passed in header, or in JSON payload as `\"api_key\": \"your_secret_key\"`"
+      }
+    },
+    "schemas": {
+      "ValidationError": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "example": "error" },
+          "message": { "type": "string", "example": "Validation failed" },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": { "type": "string" },
+                "message": { "type": "string" },
+                "type": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "CreateCollectionRequest": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Unique collection identifier (alphanumeric, dashes, underscores, dots; 3-63 chars)"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Optional dictionary of custom metadata attributes"
+          }
+        }
+      },
+      "AddDocumentsRequest": {
+        "type": "object",
+        "required": ["documents"],
+        "properties": {
+          "documents": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of text documents to embed and index"
+          },
+          "metadatas": {
+            "type": "array",
+            "items": { "type": "object" },
+            "description": "Optional list of metadata dicts corresponding 1-to-1 with documents"
+          },
+          "ids": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Optional list of unique IDs (auto-generated as UUIDs if omitted)"
+          },
+          "collection_name": {
+            "type": "string",
+            "description": "Optional collection target (defaults to DEFAULT_COLLECTION_NAME)"
+          }
+        }
+      },
+      "UpdateDocumentsRequest": {
+        "type": "object",
+        "required": ["ids"],
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of existing IDs to update"
+          },
+          "documents": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Updated text contents (optional if only updating metadatas)"
+          },
+          "metadatas": {
+            "type": "array",
+            "items": { "type": "object" },
+            "description": "Updated metadata dictionaries (optional if only updating documents)"
+          },
+          "collection_name": {
+            "type": "string",
+            "description": "Target collection name"
+          },
+          "upsert": {
+            "type": "boolean",
+            "default": false,
+            "description": "If true, inserts record if ID does not exist"
+          }
+        }
+      },
+      "UpsertDocumentsRequest": {
+        "type": "object",
+        "required": ["ids", "documents"],
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of document IDs to insert or update"
+          },
+          "documents": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Text documents"
+          },
+          "metadatas": {
+            "type": "array",
+            "items": { "type": "object" },
+            "description": "Optional metadata dictionaries"
+          },
+          "collection_name": {
+            "type": "string",
+            "description": "Target collection name"
+          }
+        }
+      },
+      "DeleteDocumentsRequest": {
+        "type": "object",
+        "required": ["ids"],
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of document IDs to delete"
+          },
+          "collection_name": {
+            "type": "string",
+            "description": "Target collection name"
+          }
+        }
+      },
+      "QueryRequest": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Single search query string"
+          },
+          "query_texts": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Alternative batch search query strings"
+          },
+          "n_results": {
+            "type": "integer",
+            "default": 5,
+            "description": "Number of top similar documents to return"
+          },
+          "where": {
+            "type": "object",
+            "description": "Chroma DB metadata filtering dict (e.g. {'category': 'event'})"
+          },
+          "collection_name": {
+            "type": "string",
+            "description": "Target collection name"
+          }
+        }
+      }
+    }
+  }
+}

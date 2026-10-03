@@ -1,0 +1,22 @@
+services:
+  flask-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hackyeah-flask-chroma
+    ports:
+      - "5000:5000"
+    environment:
+      - API_AUTH_KEY=${API_AUTH_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GEMINI_EMBEDDING_MODEL=${GEMINI_EMBEDDING_MODEL:-gemini-embedding-2}
+      - CHROMA_PERSIST_DIRECTORY=/app/chroma_data
+      - DEFAULT_COLLECTION_NAME=${DEFAULT_COLLECTION_NAME:-hackyeah_docs}
+      - MOCK_EMBEDDINGS=${MOCK_EMBEDDINGS:-false}
+    volumes:
+      - chroma_data:/app/chroma_data
+    restart: unless-stopped
+
+volumes:
+  chroma_data:
+    driver: local

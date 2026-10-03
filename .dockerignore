@@ -22,3 +22,7 @@ logs/
 # Docker
 .dockerignore
 Dockerfile
+
+# Local Chroma DB persistence
+chroma_data/
+
