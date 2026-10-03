@@ -1022,6 +1022,177 @@
           }
         }
       }
+    },
+    "/api/agent/stream": {
+      "post": {
+        "tags": [
+          "Agent Advisory"
+        ],
+        "summary": "Real-time SSE Streaming ROPS Grant & Innovation Advisory Agent",
+        "description": "Streams live reasoning steps, evidence retrieval across `rops_reports`, `rops_innovations`, and active `grants`, scorecard benchmarking, and streaming Markdown proposal synthesis over Server-Sent Events (SSE).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentEvaluateRequest"
+              },
+              "example": {
+                "api_key": "YOUR_API_KEY",
+                "query": "Potrzebujemy mobilnego wsparcia higienicznego i sanitarnego dla osób w kryzysie bezdomności przebywających poza schroniskami w powiecie olkuskim",
+                "powiat": "olkuski",
+                "applicant_type": "NGO",
+                "n_reports": 4,
+                "n_innovations": 3,
+                "n_grants": 3
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "SSE Event stream with real-time thought steps, citations, and Markdown chunks",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string",
+                  "description": "Server-Sent Events stream emitting agent_start, step_start, thought, source_citation, final_markdown_delta, step_complete, agent_complete"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Agent Advisory"
+        ],
+        "summary": "Real-time SSE Streaming via EventSource GET",
+        "description": "Supports browser native `new EventSource('/api/agent/stream?query=...&api_key=...')` for streaming agent progress directly to frontend components.",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "User project concept or social deficit problem"
+          },
+          {
+            "name": "powiat",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional Małopolska territory filter"
+          },
+          {
+            "name": "applicant_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional applicant type (JST, NGO, PES)"
+          },
+          {
+            "name": "api_key",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "API authorization key"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "SSE Event stream",
+            "content": {
+              "text/event-stream": {}
+            }
+          }
+        }
+      }
+    },
+    "/api/agent/evaluate": {
+      "post": {
+        "tags": [
+          "Agent Advisory"
+        ],
+        "summary": "Synchronous ROPS Grant & Innovation Advisory Agent",
+        "description": "Executes complete multi-step agent reasoning synchronously and returns a structured grant dossier with citations, scoring analysis, and full Markdown report as JSON.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentEvaluateRequest"
+              },
+              "example": {
+                "api_key": "YOUR_API_KEY",
+                "query": "Mobilna pomoc higieniczna dla osób bezdomnych w powiecie olkuskim",
+                "powiat": "olkuski",
+                "applicant_type": "NGO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Complete structured grant advisor dossier",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentEvaluateResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1924,6 +2095,108 @@
               "project_governance": {
                 "type": "string",
                 "description": "Guidance on inter-sectoral governance and institutional sustainability"
+              }
+            }
+          }
+        }
+      },
+      "AgentEvaluateRequest": {
+        "type": "object",
+        "required": [
+          "query"
+        ],
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 3,
+            "example": "Wsparcie higieniczno-sanitarne dla osób bezdomnych w powiecie olkuskim",
+            "description": "Project concept, social deficit problem, or target group description"
+          },
+          "powiat": {
+            "type": "string",
+            "example": "olkuski",
+            "description": "Optional territory focus in Małopolska"
+          },
+          "applicant_type": {
+            "type": "string",
+            "example": "NGO",
+            "description": "Applicant legal entity type (JST, NGO, PES)"
+          },
+          "n_reports": {
+            "type": "integer",
+            "default": 4,
+            "minimum": 1,
+            "maximum": 15,
+            "example": 4,
+            "description": "Number of empirical policy deficit report chunks to retrieve"
+          },
+          "n_innovations": {
+            "type": "integer",
+            "default": 3,
+            "minimum": 1,
+            "maximum": 10,
+            "example": 3,
+            "description": "Number of ready-to-deploy social innovations to match"
+          },
+          "n_grants": {
+            "type": "integer",
+            "default": 3,
+            "minimum": 1,
+            "maximum": 10,
+            "example": 3,
+            "description": "Number of grant regulation & scorecard chunks to retrieve"
+          },
+          "max_distance": {
+            "type": "number",
+            "format": "float",
+            "default": 0.55,
+            "example": 0.55,
+            "description": "Cosine distance threshold filter"
+          },
+          "api_key": {
+            "type": "string",
+            "example": "YOUR_API_KEY",
+            "description": "API Authorization Key"
+          }
+        }
+      },
+      "AgentEvaluateResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string"
+              },
+              "active_grant": {
+                "type": "object"
+              },
+              "policy_evidence": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              },
+              "matched_innovations": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              },
+              "grant_rules": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              },
+              "final_report_markdown": {
+                "type": "string",
+                "description": "Comprehensive grant proposal dossier formatted in GitHub Flavored Markdown"
               }
             }
           }
