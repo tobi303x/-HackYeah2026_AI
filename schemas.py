@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 class BaseAuthInput(BaseModel):
     api_key: Optional[str] = Field(None, description="API authorization key (required if authentication is enabled)")
+    admin_api_key: Optional[str] = Field(None, description="Admin authorization key (required for collection creation/deletion)")
 
 
 class CreateCollectionInput(BaseAuthInput):

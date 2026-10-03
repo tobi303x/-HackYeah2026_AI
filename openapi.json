@@ -233,7 +233,7 @@
           "Collections"
         ],
         "summary": "Create collection",
-        "description": "Creates a new Chroma DB collection configured with Gemini embeddings.",
+        "description": "Explicitly creates a collection. Requires administrative authorization (ADMIN_API_KEY).",
         "requestBody": {
           "required": true,
           "content": {
@@ -242,7 +242,7 @@
                 "$ref": "#/components/schemas/CreateCollectionRequest"
               },
               "example": {
-                "api_key": "YOUR_API_KEY",
+                "admin_api_key": "YOUR_ADMIN_API_KEY",
                 "name": "rops_innovations",
                 "metadata": {
                   "hnsw:space": "cosine",
@@ -282,8 +282,23 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Forbidden - Standard API key does not have permission to create collections",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "AdminApiKeyAuth": []
+          }
+        ]
       }
     },
     "/api/collections/{collection_name}": {
@@ -380,6 +395,15 @@
               "type": "string"
             },
             "description": "API Key"
+          },
+          {
+            "name": "admin_api_key",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Administrative API Key"
           }
         ],
         "responses": {
@@ -402,8 +426,24 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Forbidden - Standard API key cannot delete collections",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "AdminApiKeyAuth": []
+          }
+        ],
+        "description": "Deletes a collection and all of its records. Requires administrative authorization (ADMIN_API_KEY)."
       }
     },
     "/api/documents": {
@@ -811,6 +851,12 @@
         "in": "header",
         "name": "X-API-Key",
         "description": "Authorization key. Can be supplied in header `X-API-Key`, `Authorization: Bearer <key>`, or inside JSON body as `\"api_key\": \"...\"`"
+      },
+      "AdminApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Admin-API-Key",
+        "description": "Administrative key required for creating and deleting collections. Can also be supplied in JSON body as admin_api_key or query param ?admin_api_key="
       }
     },
     "schemas": {
@@ -1191,6 +1237,11 @@
           "collections_count": {
             "type": "integer",
             "example": 1
+          },
+          "admin_auth_enabled": {
+            "type": "boolean",
+            "example": true,
+            "description": "Whether administrative key authentication is configured"
           }
         },
         "required": [
@@ -1317,6 +1368,10 @@
           },
           "api_key": {
             "type": "string"
+          },
+          "admin_api_key": {
+            "type": "string",
+            "description": "Admin authorization key required to create collections"
           }
         }
       },

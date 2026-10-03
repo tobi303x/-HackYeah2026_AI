@@ -16,10 +16,17 @@ class Config:
     DEFAULT_COLLECTION_NAME = os.getenv("DEFAULT_COLLECTION_NAME", "rops_innovations")
     MOCK_EMBEDDINGS = os.getenv("MOCK_EMBEDDINGS", "False").lower() in ("true", "1", "yes")
     
-    # API Authentication Secret Key
+    # API Authentication Secret Key (Read & Document Ops)
     API_AUTH_KEY = (
         os.getenv("API_AUTH_KEY")
         or os.getenv("API_KEY")
+        or ""
+    ).strip("'\"")
+
+    # Admin API Key (Gates Collection Creation and Deletion)
+    ADMIN_API_KEY = (
+        os.getenv("ADMIN_API_KEY")
+        or os.getenv("API_ADMIN_KEY")
         or ""
     ).strip("'\"")
 
