@@ -441,9 +441,15 @@ def query_documents():
 
     try:
         collection = get_collection(name=validated.collection_name)
+        total_count = collection.count() or 1
+
+        # When max_distance is specified, fetch up to 3x candidates (capped at total_count)
+        # so filtering by distance threshold doesn't starve the requested n_results.
+        fetch_k = min(validated.n_results * 3, total_count) if validated.max_distance is not None else min(validated.n_results, total_count)
+
         results = collection.query(
             query_texts=query_texts,
-            n_results=min(validated.n_results, collection.count() or 1),
+            n_results=fetch_k,
             where=validated.where
         )
 
@@ -457,12 +463,22 @@ def query_documents():
                     results["metadatas"][i] if results.get("metadatas") else [None] * len(results["ids"][i]),
                     results["distances"][i] if results.get("distances") else [None] * len(results["ids"][i]),
                 ):
+                    # Filter out matches exceeding the maximum distance cutoff
+                    if validated.max_distance is not None and dist is not None:
+                        if dist > validated.max_distance:
+                            continue
+
                     query_res.append({
                         "id": doc_id,
                         "document": doc,
                         "metadata": meta,
                         "distance": dist
                     })
+
+                    # Stop once we have reached requested n_results
+                    if len(query_res) >= validated.n_results:
+                        break
+
             formatted_results.append({
                 "query": q,
                 "matches": query_res

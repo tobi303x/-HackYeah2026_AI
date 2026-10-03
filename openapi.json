@@ -90,6 +90,16 @@
                       "category_slug": "dla-osob-o-ograniczonej-mobilnosci"
                     }
                   }
+                },
+                "distance_filtered": {
+                  "summary": "Search with distance cutoff threshold",
+                  "value": {
+                    "api_key": "YOUR_API_KEY",
+                    "collection_name": "rops_innovations",
+                    "query": "inteligentne opaski i czujniki dla seniorów",
+                    "n_results": 5,
+                    "max_distance": 0.43
+                  }
                 }
               }
             }
@@ -1033,6 +1043,17 @@
             "type": "string",
             "example": "YOUR_API_KEY",
             "description": "API Authorization Key"
+          },
+          "max_distance": {
+            "type": "number",
+            "format": "float",
+            "example": 0.45,
+            "description": "Maximum cosine distance threshold. Excludes matches with distance > max_distance (lower distance = closer match)."
+          },
+          "distance_threshold": {
+            "type": "number",
+            "format": "float",
+            "description": "Alias for max_distance."
           }
         }
       },
