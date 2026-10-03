@@ -23,7 +23,9 @@ from schemas import (
     UpdateDocumentsInput,
     UpsertDocumentsInput,
     DeleteDocumentsInput,
-    QueryInput
+    QueryInput,
+    ReportQueryInput,
+    UnifiedRAGQueryInput
 )
 
 # Configure logging
@@ -126,7 +128,9 @@ def index():
             "upsert_documents": "POST /api/documents/upsert",
             "get_documents": "GET /api/documents",
             "delete_documents": "DELETE /api/documents",
-            "query": "POST /api/query"
+            "query": "POST /api/query",
+            "query_reports": "POST /api/reports/query",
+            "rag_search": "POST /api/rag/search"
         }
     })
 
@@ -493,5 +497,214 @@ def query_documents():
         logger.error(f"Semantic query error: {e}")
         return jsonify({"status": "error", "message": "Failed to execute semantic query."}), 500
 
+@app.route('/api/reports/query', methods=['POST'])
+@require_api_key
+def query_reports():
+    """
+    Semantic search across ROPS policy & diagnostic reports.
+    Supports filtering by year range, category, and statistics flag.
+    """
+    raw_data = request.get_json() or {}
+    try:
+        validated = ReportQueryInput.model_validate(raw_data)
+    except ValidationError as err:
+        return jsonify({"status": "error", "message": "Validation failed", "errors": format_pydantic_errors(err)}), 422
+
+    try:
+        collection = get_collection(name=validated.collection_name)
+        total_count = collection.count() or 1
+
+        # Build Chroma 'where' filter from structured fields
+        where_conditions = []
+        if validated.where:
+            where_conditions.append(validated.where)
+        if validated.year_from is not None:
+            where_conditions.append({"year": {"$gte": validated.year_from}})
+        if validated.year_to is not None:
+            where_conditions.append({"year": {"$lte": validated.year_to}})
+        if validated.category is not None:
+            where_conditions.append({"category": {"$eq": validated.category}})
+        if validated.only_statistics is True:
+            where_conditions.append({"has_statistics": {"$eq": True}})
+
+        if len(where_conditions) == 1:
+            where_filter = where_conditions[0]
+        elif len(where_conditions) > 1:
+            where_filter = {"$and": where_conditions}
+        else:
+            where_filter = None
+
+        fetch_k = min(validated.n_results * 3, total_count) if validated.max_distance is not None else min(validated.n_results, total_count)
+
+        results = collection.query(
+            query_texts=[validated.query],
+            n_results=fetch_k,
+            where=where_filter
+        )
+
+        matches = []
+        if results["ids"] and len(results["ids"]) > 0:
+            for doc_id, doc, meta, dist in zip(
+                results["ids"][0],
+                results["documents"][0] if results.get("documents") else [None] * len(results["ids"][0]),
+                results["metadatas"][0] if results.get("metadatas") else [None] * len(results["ids"][0]),
+                results["distances"][0] if results.get("distances") else [None] * len(results["ids"][0]),
+            ):
+                if validated.max_distance is not None and dist is not None:
+                    if dist > validated.max_distance:
+                        continue
+
+                matches.append({
+                    "id": doc_id,
+                    "document": doc,
+                    "metadata": meta,
+                    "distance": dist
+                })
+                if len(matches) >= validated.n_results:
+                    break
+
+        return jsonify({
+            "status": "success",
+            "collection": collection.name,
+            "query": validated.query,
+            "total_matches": len(matches),
+            "matches": matches
+        }), 200
+    except Exception as e:
+        logger.error(f"Reports query error: {e}")
+        return jsonify({"status": "error", "message": "Failed to query reports collection."}), 500
+
+@app.route('/api/rag/search', methods=['POST'])
+@require_api_key
+def unified_rag_search():
+    """
+    Unified Dual-Retrieval RAG endpoint.
+    Retrieves diagnostic evidence from 'rops_reports' and actionable solutions from 'rops_innovations',
+    and synthesizes a suggested evaluation framework structured along the ROPS canonical evaluation triad.
+    """
+    raw_data = request.get_json() or {}
+    try:
+        validated = UnifiedRAGQueryInput.model_validate(raw_data)
+    except ValidationError as err:
+        return jsonify({"status": "error", "message": "Validation failed", "errors": format_pydantic_errors(err)}), 422
+
+    try:
+        # 1. Query policy reports (rops_reports)
+        policy_evidence = []
+        if validated.n_reports > 0:
+            try:
+                rep_col = get_collection(name="rops_reports")
+                rep_total = rep_col.count()
+                if rep_total > 0:
+                    rep_fetch_k = min(validated.n_reports * 3, rep_total)
+
+                    rep_where = []
+                    if validated.year_from:
+                        rep_where.append({"year": {"$gte": validated.year_from}})
+                    if validated.category:
+                        rep_where.append({"category": {"$eq": validated.category}})
+
+                    where_filter = None
+                    if len(rep_where) == 1:
+                        where_filter = rep_where[0]
+                    elif len(rep_where) > 1:
+                        where_filter = {"$and": rep_where}
+
+                    rep_res = rep_col.query(
+                        query_texts=[validated.query],
+                        n_results=rep_fetch_k,
+                        where=where_filter
+                    )
+                    if rep_res["ids"] and len(rep_res["ids"]) > 0:
+                        for doc_id, doc, meta, dist in zip(
+                            rep_res["ids"][0],
+                            rep_res["documents"][0] if rep_res.get("documents") else [None] * len(rep_res["ids"][0]),
+                            rep_res["metadatas"][0] if rep_res.get("metadatas") else [None] * len(rep_res["ids"][0]),
+                            rep_res["distances"][0] if rep_res.get("distances") else [None] * len(rep_res["ids"][0]),
+                        ):
+                            if validated.max_distance is not None and dist is not None and dist > validated.max_distance:
+                                continue
+                            policy_evidence.append({
+                                "id": doc_id,
+                                "document": doc,
+                                "metadata": meta,
+                                "distance": dist
+                            })
+                            if len(policy_evidence) >= validated.n_reports:
+                                break
+            except Exception as e_rep:
+                logger.warning(f"Note: rops_reports query error or collection uninitialized: {e_rep}")
+
+        # 2. Query social innovations (rops_innovations)
+        social_innovations = []
+        if validated.n_innovations > 0:
+            try:
+                inn_col = get_collection(name="rops_innovations")
+                inn_total = inn_col.count()
+                if inn_total > 0:
+                    inn_fetch_k = min(validated.n_innovations * 3, inn_total)
+
+                    inn_where = None
+                    if validated.category:
+                        inn_where = {"category_slug": {"$eq": validated.category}}
+
+                    inn_res = inn_col.query(
+                        query_texts=[validated.query],
+                        n_results=inn_fetch_k,
+                        where=inn_where
+                    )
+                    if inn_res["ids"] and len(inn_res["ids"]) > 0:
+                        for doc_id, doc, meta, dist in zip(
+                            inn_res["ids"][0],
+                            inn_res["documents"][0] if inn_res.get("documents") else [None] * len(inn_res["ids"][0]),
+                            inn_res["metadatas"][0] if inn_res.get("metadatas") else [None] * len(inn_res["ids"][0]),
+                            inn_res["distances"][0] if inn_res.get("distances") else [None] * len(inn_res["ids"][0]),
+                        ):
+                            if validated.max_distance is not None and dist is not None and dist > validated.max_distance:
+                                continue
+                            social_innovations.append({
+                                "id": doc_id,
+                                "document": doc,
+                                "metadata": meta,
+                                "distance": dist
+                            })
+                            if len(social_innovations) >= validated.n_innovations:
+                                break
+            except Exception as e_inn:
+                logger.warning(f"rops_innovations query error: {e_inn}")
+
+        # 3. Canonical ROPS Evaluation Triad Guidance
+        suggested_evaluation = {
+            "substantive_actions": (
+                "Działania merytoryczne: Zdefiniuj bezpośrednie wsparcie dla beneficjentów końcowych opierając się na "
+                "wybranych innowacjach społecznych. Uwzględnij kryteria trafności (rozwiązywanie zdiagnozowanych w raportach deficytów) "
+                "oraz mierzalności rezultatów miękkich (poczucie bezpieczeństwa, sprawczość, integracja społeczna)."
+            ),
+            "promotion_and_outreach": (
+                "Promocja projektu: Zaplanuj rekrutację z poszanowaniem godności uczestników, unikając stygmatyzacji. "
+                "Wdróż standardy dostępności WCAG 2.1 i ETR (tekst łatwy do czytania). Przeprowadź działania uświadamiające otoczenie i pracodawców."
+            ),
+            "project_governance": (
+                "Zarządzanie projektem: Zbuduj partnerstwo międzysektorowe (JST/OPS/CUS + PUP + NGO/PES). "
+                "Wdróż ewaluację bieżącą (on-going) i zabezpiecz trwałość instytucjonalną poprzez wpisanie wypracowanego modelu do lokalnej Strategii (SRPS)."
+            )
+        }
+
+        return jsonify({
+            "status": "success",
+            "query": validated.query,
+            "counts": {
+                "policy_evidence": len(policy_evidence),
+                "social_innovations": len(social_innovations)
+            },
+            "policy_evidence": policy_evidence,
+            "social_innovations": social_innovations,
+            "evaluation_framework": suggested_evaluation
+        }), 200
+    except Exception as e:
+        logger.error(f"Unified RAG search error: {e}")
+        return jsonify({"status": "error", "message": "Failed to execute unified RAG search."}), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=config.PORT, debug=config.DEBUG)
+

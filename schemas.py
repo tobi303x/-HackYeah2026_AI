@@ -94,3 +94,25 @@ class QueryInput(BaseAuthInput):
             self.max_distance = self.distance_threshold
         return self
 
+
+class ReportQueryInput(BaseAuthInput):
+    query: str = Field(..., min_length=2, description="Polish natural language search query for policy reports")
+    n_results: int = Field(5, ge=1, le=50, description="Number of results to return")
+    collection_name: str = Field("rops_reports", description="Target collection, defaults to rops_reports")
+    year_from: Optional[int] = Field(None, ge=2000, le=2035, description="Filter: year >= year_from")
+    year_to: Optional[int] = Field(None, ge=2000, le=2035, description="Filter: year <= year_to")
+    category: Optional[str] = Field(None, description="Filter: topic category slug")
+    only_statistics: Optional[bool] = Field(None, description="Filter: only chunks containing quantitative/survey data")
+    max_distance: Optional[float] = Field(0.55, ge=0.0, le=2.0, description="Maximum cosine distance cutoff")
+    where: Optional[Dict[str, Any]] = Field(None, description="Optional custom Chroma metadata filtering expression")
+
+
+class UnifiedRAGQueryInput(BaseAuthInput):
+    query: str = Field(..., min_length=2, description="Problem statement or policy question")
+    n_reports: int = Field(4, ge=0, le=20, description="Number of top matches from rops_reports")
+    n_innovations: int = Field(3, ge=0, le=10, description="Number of top matches from rops_innovations")
+    max_distance: Optional[float] = Field(0.55, ge=0.0, le=2.0, description="Cosine distance threshold")
+    year_from: Optional[int] = Field(None, ge=2000, le=2035, description="Optional filter for report publication year")
+    category: Optional[str] = Field(None, description="Optional topic category slug")
+
+
