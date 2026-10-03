@@ -298,7 +298,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -393,7 +393,8 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "example": "temp_collection"
             },
             "description": "Name of collection to delete"
           },
@@ -411,7 +412,8 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "example": "YOUR_ADMIN_API_KEY"
             },
             "description": "Administrative API Key"
           }
@@ -442,7 +444,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -640,6 +642,26 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateDocumentsRequest"
+              },
+              "example": {
+                "api_key": "YOUR_API_KEY",
+                "collection_name": "rops_innovations",
+                "ids": [
+                  "dla-seniorow__bawita"
+                ],
+                "documents": [
+                  "Tytuł innowacji: BaWita\n\nKategoria: Innowacje dla seniorów\n\nRozwiązanie: Narzędzie rehabilitacyjne w postaci drewnianej tablicy manipulacyjnej wspierającej seniorów z demencją..."
+                ],
+                "metadatas": [
+                  {
+                    "title": "BaWita",
+                    "category_id": 1,
+                    "category_name": "Innowacje dla seniorów",
+                    "category_slug": "dla-seniorow",
+                    "authors": "- Maria Lorenc - Maciej Parol",
+                    "source_url": "https://rops.krakow.pl/innowacje-spoleczne/biblioteka-innowacji-spolecznych/dla-seniorow,bawita"
+                  }
+                ]
               }
             }
           }
@@ -1108,7 +1130,8 @@
             "example": "success"
           },
           "message": {
-            "type": "string"
+            "type": "string",
+            "example": "Collection 'rops_innovations' retrieved successfully."
           },
           "collection": {
             "$ref": "#/components/schemas/CollectionItem"
@@ -1308,7 +1331,8 @@
             "example": "success"
           },
           "message": {
-            "type": "string"
+            "type": "string",
+            "example": "Operation completed successfully."
           }
         },
         "required": [
