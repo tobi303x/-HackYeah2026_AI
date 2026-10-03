@@ -132,9 +132,19 @@ def index():
             "delete_documents": "DELETE /api/documents",
             "query": "POST /api/query",
             "query_reports": "POST /api/reports/query",
-            "rag_search": "POST /api/rag/search"
+            "rag_search": "POST /api/rag/search",
+            "agent_stream": "POST /api/agent/stream",
+            "agent_evaluate": "POST /api/agent/evaluate",
+            "agent_ui": "GET /agent-ui"
         }
     })
+
+@app.route('/agent-ui', methods=['GET'])
+@app.route('/demo', methods=['GET'])
+def agent_ui():
+    """Interactive ROPS Grant & Innovation Advisor Web UI Demonstrator."""
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    return send_from_directory(os.path.join(base_dir, 'static'), 'index.html', mimetype='text/html')
 
 @app.route('/openapi.json', methods=['GET'])
 def get_openapi_spec():
