@@ -43,6 +43,10 @@
     {
       "name": "System",
       "description": "Health status and diagnostics"
+    },
+    {
+      "name": "RAG & Reports",
+      "description": "Evidence-based policy diagnostic search and unified problem-to-solution retrieval engine"
     }
   ],
   "paths": {
@@ -874,6 +878,150 @@
           }
         }
       }
+    },
+    "/api/reports/query": {
+      "post": {
+        "tags": [
+          "RAG & Reports"
+        ],
+        "summary": "Semantic query across ROPS diagnostic & evaluation reports",
+        "description": "Performs filtered semantic similarity search over empirical reports (`rops_reports`) with rich metadata filters (year, category, statistical indicators, distance cutoff).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportQueryRequest"
+              },
+              "examples": {
+                "caregiver_burnout": {
+                  "summary": "Caregiver burnout and workforce deficits",
+                  "value": {
+                    "api_key": "YOUR_API_KEY",
+                    "query": "wypalenie zawodowe opiekunów osób starszych i braki kadrowe",
+                    "n_results": 3,
+                    "year_from": 2023,
+                    "max_distance": 0.5
+                  }
+                },
+                "deinstitutionalization": {
+                  "summary": "Assisted housing and deinstitutionalization",
+                  "value": {
+                    "api_key": "YOUR_API_KEY",
+                    "query": "mieszkania treningowe i wspomagane proces deinstytucjonalizacji",
+                    "n_results": 4,
+                    "category": "uslugi-opiekuncze-i-deinstytucjonalizacja"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ranked report excerpt matches",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportQueryResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (invalid or missing api_key)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error in request parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rag/search": {
+      "post": {
+        "tags": [
+          "RAG & Reports"
+        ],
+        "summary": "Unified Problem-to-Solution RAG dual retrieval",
+        "description": "Simultaneously queries diagnostic policy reports (`rops_reports`) and field-tested social innovations (`rops_innovations`), returning evidence-backed social problem analysis paired with ready-to-deploy blueprints and the ROPS canonical evaluation triad framework.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnifiedRAGQueryRequest"
+              },
+              "examples": {
+                "senior_isolation": {
+                  "summary": "Problem-to-solution query: Senior isolation in rural areas",
+                  "value": {
+                    "api_key": "YOUR_API_KEY",
+                    "query": "izolacja społeczna seniorów w gminach wiejskich i trudności w dostępie do opieki",
+                    "n_reports": 3,
+                    "n_innovations": 2,
+                    "max_distance": 0.5
+                  }
+                },
+                "foster_care_burnout": {
+                  "summary": "Problem-to-solution query: Foster family support & crisis",
+                  "value": {
+                    "api_key": "YOUR_API_KEY",
+                    "query": "kryzysy w pieczy zastępczej i wsparcie psychologiczne rodzin zastępczych",
+                    "n_reports": 2,
+                    "n_innovations": 2
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Unified dual-retrieval results with ROPS evaluation triad",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnifiedRAGResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (invalid or missing api_key)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error in request parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1542,6 +1690,242 @@
           },
           "api_key": {
             "type": "string"
+          }
+        }
+      },
+      "ReportQueryRequest": {
+        "type": "object",
+        "required": [
+          "query"
+        ],
+        "properties": {
+          "query": {
+            "type": "string",
+            "example": "deficyty opieki wytchnieniowej dla osób z niepełnosprawnościami i seniorów",
+            "description": "Polish natural language query describing policy deficits, social issues, or diagnostic needs"
+          },
+          "collection_name": {
+            "type": "string",
+            "default": "rops_reports",
+            "example": "rops_reports",
+            "description": "Target Chroma collection (defaults to rops_reports)"
+          },
+          "n_results": {
+            "type": "integer",
+            "default": 5,
+            "minimum": 1,
+            "maximum": 50,
+            "example": 3,
+            "description": "Number of top matching report chunks to return"
+          },
+          "year_from": {
+            "type": "integer",
+            "minimum": 2000,
+            "maximum": 2035,
+            "example": 2022,
+            "description": "Filter by minimum publication year (year >= year_from)"
+          },
+          "year_to": {
+            "type": "integer",
+            "minimum": 2000,
+            "maximum": 2035,
+            "example": 2026,
+            "description": "Filter by maximum publication year (year <= year_to)"
+          },
+          "category": {
+            "type": "string",
+            "example": "uslugi-opiekuncze-i-deinstytucjonalizacja",
+            "description": "Filter by topic category slug"
+          },
+          "only_statistics": {
+            "type": "boolean",
+            "example": false,
+            "description": "Filter only chunks containing quantitative data or statistical tables"
+          },
+          "max_distance": {
+            "type": "number",
+            "format": "float",
+            "default": 0.55,
+            "example": 0.5,
+            "description": "Maximum cosine distance cutoff (lower distance = closer match)"
+          },
+          "where": {
+            "type": "object",
+            "description": "Custom Chroma metadata filtering expression"
+          },
+          "api_key": {
+            "type": "string",
+            "example": "YOUR_API_KEY",
+            "description": "API Authorization Key"
+          }
+        }
+      },
+      "ReportQueryResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "collection": {
+            "type": "string",
+            "example": "rops_reports"
+          },
+          "query": {
+            "type": "string",
+            "example": "deficyty opieki wytchnieniowej"
+          },
+          "count": {
+            "type": "integer",
+            "example": 2
+          },
+          "matches": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "example": "rep_01_p14_c02"
+                },
+                "distance": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 0.3842
+                },
+                "document": {
+                  "type": "string",
+                  "example": "[ROPS | Raport: Wyzwania sektora opiekuńczego | Rok: 2026 | Str. 14] ..."
+                },
+                "metadata": {
+                  "type": "object",
+                  "properties": {
+                    "report_title": {
+                      "type": "string"
+                    },
+                    "year": {
+                      "type": "integer"
+                    },
+                    "category": {
+                      "type": "string"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "source_url": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "UnifiedRAGQueryRequest": {
+        "type": "object",
+        "required": [
+          "query"
+        ],
+        "properties": {
+          "query": {
+            "type": "string",
+            "example": "samotność osób starszych i brak dostępu do rehabilitacji w gminach wiejskich",
+            "description": "Problem statement, community deficit diagnosis, or project grant idea in natural Polish"
+          },
+          "n_reports": {
+            "type": "integer",
+            "default": 4,
+            "minimum": 0,
+            "maximum": 20,
+            "example": 3,
+            "description": "Number of empirical diagnostic chunks to retrieve from rops_reports"
+          },
+          "n_innovations": {
+            "type": "integer",
+            "default": 3,
+            "minimum": 0,
+            "maximum": 10,
+            "example": 2,
+            "description": "Number of proven social innovations to retrieve from rops_innovations"
+          },
+          "max_distance": {
+            "type": "number",
+            "format": "float",
+            "default": 0.55,
+            "example": 0.48,
+            "description": "Cosine distance threshold filter"
+          },
+          "year_from": {
+            "type": "integer",
+            "minimum": 2000,
+            "maximum": 2035,
+            "example": 2021,
+            "description": "Filter reports by publication year >= year_from"
+          },
+          "category": {
+            "type": "string",
+            "example": "dla-seniorow",
+            "description": "Optional category slug filter applied to both collections"
+          },
+          "api_key": {
+            "type": "string",
+            "example": "YOUR_API_KEY",
+            "description": "API Authorization Key"
+          }
+        }
+      },
+      "UnifiedRAGResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "query": {
+            "type": "string"
+          },
+          "counts": {
+            "type": "object",
+            "properties": {
+              "policy_evidence": {
+                "type": "integer",
+                "example": 3
+              },
+              "social_innovations": {
+                "type": "integer",
+                "example": 2
+              }
+            }
+          },
+          "policy_evidence": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QueryMatch"
+            }
+          },
+          "social_innovations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QueryMatch"
+            }
+          },
+          "evaluation_framework": {
+            "type": "object",
+            "properties": {
+              "substantive_actions": {
+                "type": "string",
+                "description": "Guidance on substantive direct actions and quality criteria"
+              },
+              "promotion_and_outreach": {
+                "type": "string",
+                "description": "Guidance on stigma-free recruitment and accessibility"
+              },
+              "project_governance": {
+                "type": "string",
+                "description": "Guidance on inter-sectoral governance and institutional sustainability"
+              }
+            }
           }
         }
       }

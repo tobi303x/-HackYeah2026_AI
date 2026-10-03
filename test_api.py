@@ -117,7 +117,34 @@ def test_api():
     print(f"Status: {res.status_code}, Response: {res.json()}")
     assert res.status_code == 200
 
-    print("\n[SUCCESS] ALL STANDARD & ADMIN AUTHENTICATION GATING CHECKS VERIFIED!")
+    print(f"\n=== 12. Testing Policy Reports Query Endpoint (/api/reports/query) ===")
+    rep_payload = {
+        "api_key": AUTH_KEY,
+        "query": "wyzwania i potrzeby opieki senioralnej",
+        "n_results": 3,
+        "collection_name": "rops_innovations"  # test with available collection
+    }
+    res = requests.post(f"{BASE_URL}/api/reports/query", json=rep_payload)
+    print(f"Status: {res.status_code}, Response keys: {list(res.json().keys())}")
+    assert res.status_code == 200
+    assert "matches" in res.json()
+
+    print(f"\n=== 13. Testing Unified RAG Dual-Retrieval Endpoint (/api/rag/search) ===")
+    rag_payload = {
+        "api_key": AUTH_KEY,
+        "query": "pomoc dla osób starszych w miejscu zamieszkania",
+        "n_reports": 2,
+        "n_innovations": 2
+    }
+    res = requests.post(f"{BASE_URL}/api/rag/search", json=rag_payload)
+    print(f"Status: {res.status_code}, Counts: {res.json().get('counts')}")
+    assert res.status_code == 200
+    assert "policy_evidence" in res.json()
+    assert "social_innovations" in res.json()
+    assert "evaluation_framework" in res.json()
+    print("[OK] Unified RAG Search: PASSED")
+
+    print("\n[SUCCESS] ALL STANDARD, ADMIN, AND RAG DUAL-RETRIEVAL CHECKS VERIFIED!")
 
 if __name__ == "__main__":
     test_api()
