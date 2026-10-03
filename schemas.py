@@ -116,3 +116,14 @@ class UnifiedRAGQueryInput(BaseAuthInput):
     category: Optional[str] = Field(None, description="Optional topic category slug")
 
 
+class AgentEvaluateInput(BaseAuthInput):
+    query: str = Field(..., min_length=3, description="Project concept, social deficit problem, or target group description")
+    powiat: Optional[str] = Field(None, description="Optional territory focus in Małopolska (e.g. olkuski, chrzanowski, tarnowski)")
+    applicant_type: Optional[str] = Field(None, description="Optional applicant type (JST, NGO, PES)")
+    n_reports: int = Field(4, ge=1, le=15, description="Number of empirical deficit report chunks to retrieve")
+    n_innovations: int = Field(3, ge=1, le=10, description="Number of social innovations to retrieve")
+    n_grants: int = Field(3, ge=1, le=10, description="Number of grant regulation/implementation chunks to retrieve")
+    max_distance: Optional[float] = Field(0.55, ge=0.0, le=2.0, description="Cosine distance threshold cutoff")
+
+
+

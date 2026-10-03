@@ -1,7 +1,7 @@
 import os
 import uuid
 import logging
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, Response, stream_with_context
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -25,8 +25,10 @@ from schemas import (
     DeleteDocumentsInput,
     QueryInput,
     ReportQueryInput,
-    UnifiedRAGQueryInput
+    UnifiedRAGQueryInput,
+    AgentEvaluateInput
 )
+from agent_service import generate_agent_stream, evaluate_idea_synchronous
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -705,6 +707,58 @@ def unified_rag_search():
         logger.error(f"Unified RAG search error: {e}")
         return jsonify({"status": "error", "message": "Failed to execute unified RAG search."}), 500
 
+@app.route('/api/agent/stream', methods=['GET', 'POST'])
+@require_api_key
+def agent_stream_evaluation():
+    """
+    Real-time Server-Sent Events (SSE) streaming endpoint for autonomous ROPS Grant Advisory.
+    Streams structured thinking steps, evidence retrieval from rops_reports & rops_innovations & grants,
+    scoring benchmarking, and streaming Markdown grant proposal dossier.
+    """
+    if request.method == 'GET':
+        raw_data = request.args.to_dict()
+    else:
+        raw_data = request.get_json() or {}
+
+    try:
+        validated = AgentEvaluateInput.model_validate(raw_data)
+    except ValidationError as err:
+        return jsonify({"status": "error", "message": "Validation failed", "errors": format_pydantic_errors(err)}), 422
+
+    response = Response(
+        stream_with_context(generate_agent_stream(validated)),
+        mimetype='text/event-stream'
+    )
+    response.headers['Cache-Control'] = 'no-cache, no-transform'
+    response.headers['X-Accel-Buffering'] = 'no'
+    response.headers['Connection'] = 'keep-alive'
+    return response
+
+@app.route('/api/agent/evaluate', methods=['POST'])
+@require_api_key
+def agent_evaluate_synchronous():
+    """
+    Synchronous REST endpoint for ROPS Social Innovation & Grant Advisory.
+    Executes full multi-step reasoning and returns structured evaluation report,
+    retrieved citations, scorecard compliance, and complete Markdown dossier as JSON.
+    """
+    raw_data = request.get_json() or {}
+    try:
+        validated = AgentEvaluateInput.model_validate(raw_data)
+    except ValidationError as err:
+        return jsonify({"status": "error", "message": "Validation failed", "errors": format_pydantic_errors(err)}), 422
+
+    try:
+        result = evaluate_idea_synchronous(validated)
+        return jsonify({
+            "status": "success",
+            "data": result
+        }), 200
+    except Exception as e:
+        logger.error(f"Agent evaluation error: {e}", exc_info=True)
+        return jsonify({"status": "error", "message": f"Agent evaluation failed: {str(e)}"}), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=config.PORT, debug=config.DEBUG)
+
 

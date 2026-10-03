@@ -144,7 +144,53 @@ def test_api():
     assert "evaluation_framework" in res.json()
     print("[OK] Unified RAG Search: PASSED")
 
-    print("\n[SUCCESS] ALL STANDARD, ADMIN, AND RAG DUAL-RETRIEVAL CHECKS VERIFIED!")
+    print(f"\n=== 14. Testing Synchronous ROPS Grant Advisor Endpoint (/api/agent/evaluate) ===")
+    agent_payload = {
+        "api_key": AUTH_KEY,
+        "query": "Mobilne modułowe zaplecze higieniczne dla osób bezdomnych poza schroniskami",
+        "powiat": "olkuski",
+        "applicant_type": "NGO",
+        "n_reports": 2,
+        "n_innovations": 2,
+        "n_grants": 2
+    }
+    res = requests.post(f"{BASE_URL}/api/agent/evaluate", json=agent_payload, timeout=60)
+    print(f"Status: {res.status_code}")
+    assert res.status_code == 200
+    res_data = res.json().get("data", {})
+    assert "active_grant" in res_data
+    assert "final_report_markdown" in res_data
+    assert len(res_data["final_report_markdown"]) > 100
+    print(f"Active Grant identified: {res_data['active_grant'].get('title')}")
+    print(f"Markdown dossier length: {len(res_data['final_report_markdown'])} chars")
+    print("[OK] Synchronous Agent Evaluation: PASSED")
+
+    print(f"\n=== 15. Testing Real-time SSE Agent Streaming Endpoint (/api/agent/stream) ===")
+    stream_payload = {
+        "api_key": AUTH_KEY,
+        "query": "Wsparcie wytchnieniowe dla opiekunów osób starszych w Małopolsce",
+        "n_reports": 2,
+        "n_innovations": 2,
+        "n_grants": 2
+    }
+    res_stream = requests.post(f"{BASE_URL}/api/agent/stream", json=stream_payload, stream=True, timeout=60)
+    print(f"Status: {res_stream.status_code}, Content-Type: {res_stream.headers.get('Content-Type')}")
+    assert res_stream.status_code == 200
+    assert "text/event-stream" in res_stream.headers.get("Content-Type", "")
+
+    events_received = []
+    for line in res_stream.iter_lines(decode_unicode=True):
+        if line and line.startswith("event:"):
+            event_name = line.split(":", 1)[1].strip()
+            events_received.append(event_name)
+
+    print(f"Events captured: {events_received}")
+    assert "agent_start" in events_received
+    assert "step_start" in events_received
+    assert "agent_complete" in events_received
+    print("[OK] Real-time SSE Agent Streaming: PASSED")
+
+    print("\n[SUCCESS] ALL STANDARD, ADMIN, RAG DUAL-RETRIEVAL, AND AGENT SSE CHECKS VERIFIED!")
 
 if __name__ == "__main__":
     test_api()
