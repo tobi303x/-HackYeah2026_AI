@@ -9,7 +9,7 @@ from werkzeug.exceptions import HTTPException
 from pydantic import ValidationError
 
 from config import config
-from auth import require_api_key
+from auth import require_api_key, require_admin_key
 from db import (
     get_collection,
     create_new_collection,
@@ -182,6 +182,7 @@ def health():
             "embedding_model": config.GEMINI_EMBEDDING_MODEL,
             "gemini_api_key_configured": has_api_key,
             "auth_enabled": bool(config.API_AUTH_KEY),
+            "admin_auth_enabled": bool(config.ADMIN_API_KEY),
             "mock_embeddings_enabled": config.MOCK_EMBEDDINGS,
             "collections_count": len(collections)
         }), 200
@@ -209,10 +210,11 @@ def get_collections():
         return jsonify({"status": "error", "message": "Failed to list collections."}), 500
 
 @app.route('/api/collections', methods=['POST'])
-@require_api_key
+@require_admin_key
 def create_collection_route():
     """
     Create a new collection in Chroma DB with Pydantic validation & auth.
+    Requires ADMIN_API_KEY.
     """
     raw_data = request.get_json() or {}
     try:
@@ -253,9 +255,12 @@ def get_single_collection(collection_name):
         return jsonify({"status": "error", "message": f"Collection '{collection_name}' not found."}), 404
 
 @app.route('/api/collections/<collection_name>', methods=['DELETE'])
-@require_api_key
+@require_admin_key
 def delete_collection_route(collection_name):
-    """Delete a collection and all of its records."""
+    """
+    Delete a collection and all of its records.
+    Requires ADMIN_API_KEY.
+    """
     try:
         delete_collection_by_name(collection_name)
         return jsonify({
@@ -436,9 +441,15 @@ def query_documents():
 
     try:
         collection = get_collection(name=validated.collection_name)
+        total_count = collection.count() or 1
+
+        # When max_distance is specified, fetch up to 3x candidates (capped at total_count)
+        # so filtering by distance threshold doesn't starve the requested n_results.
+        fetch_k = min(validated.n_results * 3, total_count) if validated.max_distance is not None else min(validated.n_results, total_count)
+
         results = collection.query(
             query_texts=query_texts,
-            n_results=min(validated.n_results, collection.count() or 1),
+            n_results=fetch_k,
             where=validated.where
         )
 
@@ -452,12 +463,22 @@ def query_documents():
                     results["metadatas"][i] if results.get("metadatas") else [None] * len(results["ids"][i]),
                     results["distances"][i] if results.get("distances") else [None] * len(results["ids"][i]),
                 ):
+                    # Filter out matches exceeding the maximum distance cutoff
+                    if validated.max_distance is not None and dist is not None:
+                        if dist > validated.max_distance:
+                            continue
+
                     query_res.append({
                         "id": doc_id,
                         "document": doc,
                         "metadata": meta,
                         "distance": dist
                     })
+
+                    # Stop once we have reached requested n_results
+                    if len(query_res) >= validated.n_results:
+                        break
+
             formatted_results.append({
                 "query": q,
                 "matches": query_res

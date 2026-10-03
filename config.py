@@ -13,13 +13,20 @@ class Config:
     ).strip("'\"")
     GEMINI_EMBEDDING_MODEL = os.getenv("GEMINI_EMBEDDING_MODEL", "gemini-embedding-2")
     CHROMA_PERSIST_DIRECTORY = os.getenv("CHROMA_PERSIST_DIRECTORY", os.path.join(os.getcwd(), "chroma_data"))
-    DEFAULT_COLLECTION_NAME = os.getenv("DEFAULT_COLLECTION_NAME", "hackyeah_docs")
+    DEFAULT_COLLECTION_NAME = os.getenv("DEFAULT_COLLECTION_NAME", "rops_innovations")
     MOCK_EMBEDDINGS = os.getenv("MOCK_EMBEDDINGS", "False").lower() in ("true", "1", "yes")
     
-    # API Authentication Secret Key
+    # API Authentication Secret Key (Read & Document Ops)
     API_AUTH_KEY = (
         os.getenv("API_AUTH_KEY")
         or os.getenv("API_KEY")
+        or ""
+    ).strip("'\"")
+
+    # Admin API Key (Gates Collection Creation and Deletion)
+    ADMIN_API_KEY = (
+        os.getenv("ADMIN_API_KEY")
+        or os.getenv("API_ADMIN_KEY")
         or ""
     ).strip("'\"")
 

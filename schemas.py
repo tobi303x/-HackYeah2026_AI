@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 class BaseAuthInput(BaseModel):
     api_key: Optional[str] = Field(None, description="API authorization key (required if authentication is enabled)")
+    admin_api_key: Optional[str] = Field(None, description="Admin authorization key (required for collection creation/deletion)")
 
 
 class CreateCollectionInput(BaseAuthInput):
@@ -82,9 +83,14 @@ class QueryInput(BaseAuthInput):
     n_results: int = Field(5, ge=1, le=100, description="Number of results to return")
     where: Optional[Dict[str, Any]] = Field(None, description="Chroma metadata filtering expression")
     collection_name: Optional[str] = Field(None, description="Target collection name")
+    max_distance: Optional[float] = Field(None, ge=0.0, le=2.0, description="Maximum cosine distance cutoff (relevance threshold). Only matches with distance <= max_distance are returned.")
+    distance_threshold: Optional[float] = Field(None, ge=0.0, le=2.0, description="Alias for max_distance.")
 
     @model_validator(mode="after")
     def check_query(self):
         if not self.query and not self.query_texts:
             raise ValueError("Either 'query' (string) or 'query_texts' (list) must be provided.")
+        if self.distance_threshold is not None and self.max_distance is None:
+            self.max_distance = self.distance_threshold
         return self
+
