@@ -187,6 +187,7 @@ def swagger_ui():
 </html>"""
 
 @app.route('/health', methods=['GET'])
+@require_api_key
 def health():
     try:
         client = get_chroma_client()

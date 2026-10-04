@@ -167,7 +167,7 @@
       <div class="px-5 sm:px-8 py-3.5 border-b border-slate-100 flex items-center justify-between gap-4 bg-slate-50/50">
         <div class="flex items-center gap-2.5">
           <span id="scoreBadge" class="hidden px-2 py-0.5 text-xs font-semibold rounded-md bg-emerald-100 text-emerald-800">WTD: 97/100 · Klasa A</span>
-          <span class="text-xs text-slate-400">Dofinansowanie do 600 000 zł (100%)</span>
+          <span id="grantSubtitle" class="text-xs text-slate-400">Weryfikacja naborów ROPS</span>
         </div>
         <div class="flex items-center gap-2">
           <button id="copyMdBtn" class="px-2.5 py-1 text-xs text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-lg hover:border-slate-300 transition-colors cursor-pointer">Kopiuj</button>
@@ -285,10 +285,26 @@
     });
 
     async function executeAgentStream(query, powiat, applicantType) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const apiKey = urlParams.get('api_key') || localStorage.getItem('api_key') || 'huj_dupa_cycki_2026_hack_yeah_!';
+
+      const payload = {
+        query,
+        powiat,
+        applicant_type: applicantType,
+        n_reports: 3,
+        n_innovations: 2,
+        n_grants: 2
+      };
+      if (apiKey) payload.api_key = apiKey;
+
+      const headers = { 'Content-Type': 'application/json' };
+      if (apiKey) headers['X-API-Key'] = apiKey;
+
       const response = await fetch('/api/agent/stream', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query, powiat, applicant_type: applicantType, n_reports: 3, n_innovations: 2, n_grants: 2 })
+        headers,
+        body: JSON.stringify(payload)
       });
 
       if (!response.ok || !response.body) {
@@ -338,7 +354,16 @@
         const sc = data.scorecard || data;
         if (sc) {
           const scoreBadge = document.getElementById('scoreBadge');
-          scoreBadge.textContent = `WTD: ${sc.total_wtd || '97'}/100 · ${sc.grade || 'Klasa A'}`;
+          const grantSubtitle = document.getElementById('grantSubtitle');
+          if (sc.is_grant_matched) {
+            scoreBadge.textContent = `WTD: ${sc.total_wtd || '97'}/100 · ${sc.grade || 'Klasa A'}`;
+            scoreBadge.className = 'px-2 py-0.5 text-xs font-semibold rounded-md bg-emerald-100 text-emerald-800';
+            if (grantSubtitle) grantSubtitle.textContent = 'Usługa Wrażliwa II (Dofinansowanie do 600 000 zł)';
+          } else {
+            scoreBadge.textContent = `Potencjał merytoryczny: ${sc.diagnostic_subtotal || sc.total_wtd}/90 pkt`;
+            scoreBadge.className = 'px-2 py-0.5 text-xs font-semibold rounded-md bg-blue-100 text-blue-800';
+            if (grantSubtitle) grantSubtitle.textContent = 'Diagnoza ROPS & Innowacje (Alternatywne ścieżki finansowania)';
+          }
           scoreBadge.classList.remove('hidden');
         }
       } else if (type === 'final_markdown_delta') {
