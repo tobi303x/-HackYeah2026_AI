@@ -29,6 +29,7 @@ from schemas import (
     AgentEvaluateInput
 )
 from agent_service import generate_agent_stream, evaluate_idea_synchronous
+from mail_service import send_dossier_email
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -770,6 +771,44 @@ def agent_evaluate_synchronous():
     except Exception as e:
         logger.error(f"Agent evaluation error: {e}", exc_info=True)
         return jsonify({"status": "error", "message": f"Agent evaluation failed: {str(e)}"}), 500
+
+@app.route('/api/agent/send-email', methods=['POST'])
+@require_api_key
+def agent_send_email():
+    """
+    Sends the generated ROPS evaluation dossier and grant strategy
+    directly to the applicant's email address via SMTP.
+    """
+    raw_data = request.get_json() or {}
+    recipient = raw_data.get("recipient_email") or raw_data.get("email") or raw_data.get("to_email")
+    if not recipient or "@" not in str(recipient):
+        return jsonify({
+            "status": "error",
+            "message": "Podaj prawidłowy adres e-mail odbiorcy ('recipient_email' lub 'to_email')."
+        }), 400
+
+    markdown_report = raw_data.get("markdown_report") or raw_data.get("report") or ""
+    subject = raw_data.get("subject")
+    query = raw_data.get("query")
+    powiat = raw_data.get("powiat")
+    applicant_type = raw_data.get("applicant_type")
+    scorecard = raw_data.get("scorecard")
+    recipient_name = raw_data.get("recipient_name") or raw_data.get("name")
+
+    res = send_dossier_email(
+        recipient_email=recipient,
+        subject=subject,
+        markdown_report=markdown_report,
+        query=query,
+        powiat=powiat,
+        applicant_type=applicant_type,
+        scorecard=scorecard,
+        recipient_name=recipient_name
+    )
+
+    status_code = 200 if res.get("status") == "success" else 500
+    return jsonify(res), status_code
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=config.PORT, debug=config.DEBUG)

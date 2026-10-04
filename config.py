@@ -40,4 +40,14 @@ class Config:
     PORT = int(os.getenv("PORT", 5000))
     DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
 
+    # SMTP Configuration
+    SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
+    SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+    SMTP_USERNAME = os.getenv("SMTP_USERNAME", "").strip("'\"")
+    SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "").strip("'\"")
+    SMTP_FROM_EMAIL = os.getenv("SMTP_FROM_EMAIL", "").strip("'\"")
+    SMTP_FROM_NAME = os.getenv("SMTP_FROM_NAME", "ROPS Doradca Grantowy")
+    SMTP_USE_TLS = os.getenv("SMTP_USE_TLS", "True").lower() in ("true", "1", "yes")
+    SMTP_USE_SSL = os.getenv("SMTP_USE_SSL", "False").lower() in ("true", "1", "yes")
+
 config = Config()
