@@ -617,18 +617,22 @@
         const data = await resp.json();
 
         if (resp.ok && data.status === 'success') {
-          emailModalStatus.className = 'p-3 rounded-xl text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 block';
-          emailModalStatus.textContent = data.message || `✓ Raport został pomyślnie wysłany na adres: ${email}!`;
-          sendEmailBtnText.textContent = '✓ Wysłano';
+          if (data.mock) {
+            emailModalStatus.className = 'p-3 rounded-xl text-xs bg-amber-50 text-amber-900 border border-amber-200 block';
+            emailModalStatus.innerHTML = `⚠️ <strong>Tryb testowy serwera</strong>: Kontener nie załadował jeszcze Twoich zmiennych SMTP. Jeśli dodałeś zmienne w Coolify, kliknij <em>Restart / Redeploy</em> w panelu Coolify, aby kontener je wczytał.`;
+          } else {
+            emailModalStatus.className = 'p-3 rounded-xl text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 block';
+            emailModalStatus.innerHTML = `✓ <strong>Sukces!</strong> Raport z analizą i załącznik <code>dossier_rops.md</code> zostały wysłane przez Twój serwer pocztowy na adres: <strong>${email}</strong>!`;
+          }
+          sendEmailBtnText.textContent = data.mock ? 'Zakończono (test)' : '✓ Wysłano';
           sendEmailBtnSpinner.classList.add('hidden');
 
           setTimeout(() => {
             closeEmailModal();
-            // Show toast on email button
             const orig = sendEmailBtn.innerHTML;
-            sendEmailBtn.innerHTML = `✓ Wysłano e-mail`;
+            sendEmailBtn.innerHTML = data.mock ? `✓ Test e-mail` : `✓ Wysłano e-mail`;
             setTimeout(() => sendEmailBtn.innerHTML = orig, 3000);
-          }, 1800);
+          }, 2400);
         } else {
           throw new Error(data.message || 'Błąd wysyłki wiadomości e-mail.');
         }
