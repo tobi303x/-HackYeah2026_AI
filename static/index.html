@@ -145,6 +145,59 @@
       <button class="preset-btn hover:text-slate-900 underline underline-offset-4 decoration-slate-200 hover:decoration-slate-400 transition-colors cursor-pointer" data-query="Narzędzie koMIX życiowy oraz mentoring usamodzielnienia dla młodzieży opuszczającej pieczę zastępczą" data-powiat="nowosadecki" data-type="NGO">koMIX życiowy</button>
     </div>
 
+    <!-- 5 Głównych Kroków Agenta ROPS -->
+    <section id="stepperSection" class="hidden bg-white border border-slate-200/90 rounded-2xl shadow-xs p-3.5 sm:p-4 space-y-3 transition-all">
+      <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 px-1 flex items-center justify-between">
+        <span class="flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+          5 Głównych Kroków Agenta ROPS
+        </span>
+        <span id="stepperSummary" class="text-slate-500 font-mono lowercase font-normal">0/5 ukończono</span>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-2" id="agentStepsList">
+        <!-- Krok 1 -->
+        <div id="step-node-step_parse" class="step-card border border-slate-200 rounded-xl p-2.5 bg-slate-50/60 transition-all flex flex-col justify-between">
+          <div class="flex items-center gap-2">
+            <span class="step-badge w-5 h-5 rounded-full bg-slate-200 text-slate-600 text-[11px] font-semibold flex items-center justify-center shrink-0">1</span>
+            <span class="text-xs font-medium text-slate-700 truncate">Założenia</span>
+          </div>
+          <p class="step-desc text-[11px] text-slate-400 mt-1 truncate">Parsowanie koncepcji</p>
+        </div>
+        <!-- Krok 2 -->
+        <div id="step-node-step_diagnosis" class="step-card border border-slate-200 rounded-xl p-2.5 bg-slate-50/60 transition-all flex flex-col justify-between">
+          <div class="flex items-center gap-2">
+            <span class="step-badge w-5 h-5 rounded-full bg-slate-200 text-slate-600 text-[11px] font-semibold flex items-center justify-center shrink-0">2</span>
+            <span class="text-xs font-medium text-slate-700 truncate">Raporty ROPS</span>
+          </div>
+          <p class="step-desc text-[11px] text-slate-400 mt-1 truncate">Kwerenda 51 badań</p>
+        </div>
+        <!-- Krok 3 -->
+        <div id="step-node-step_innovation" class="step-card border border-slate-200 rounded-xl p-2.5 bg-slate-50/60 transition-all flex flex-col justify-between">
+          <div class="flex items-center gap-2">
+            <span class="step-badge w-5 h-5 rounded-full bg-slate-200 text-slate-600 text-[11px] font-semibold flex items-center justify-center shrink-0">3</span>
+            <span class="text-xs font-medium text-slate-700 truncate">Baza Innowacji</span>
+          </div>
+          <p class="step-desc text-[11px] text-slate-400 mt-1 truncate">Dobór z 114 modeli</p>
+        </div>
+        <!-- Krok 4 -->
+        <div id="step-node-step_grant_check" class="step-card border border-slate-200 rounded-xl p-2.5 bg-slate-50/60 transition-all flex flex-col justify-between">
+          <div class="flex items-center gap-2">
+            <span class="step-badge w-5 h-5 rounded-full bg-slate-200 text-slate-600 text-[11px] font-semibold flex items-center justify-center shrink-0">4</span>
+            <span class="text-xs font-medium text-slate-700 truncate">Nabór i Grant</span>
+          </div>
+          <p class="step-desc text-[11px] text-slate-400 mt-1 truncate">Dystans wektorowy</p>
+        </div>
+        <!-- Krok 5 -->
+        <div id="step-node-step_synthesis" class="step-card col-span-2 sm:col-span-1 border border-slate-200 rounded-xl p-2.5 bg-slate-50/60 transition-all flex flex-col justify-between">
+          <div class="flex items-center gap-2">
+            <span class="step-badge w-5 h-5 rounded-full bg-slate-200 text-slate-600 text-[11px] font-semibold flex items-center justify-center shrink-0">5</span>
+            <span class="text-xs font-medium text-slate-700 truncate">Synteza Dossier</span>
+          </div>
+          <p class="step-desc text-[11px] text-slate-400 mt-1 truncate">Gemini 3.8 Flash</p>
+        </div>
+      </div>
+    </section>
+
     <!-- Minimal Progress & Status (Visible during / after generation) -->
     <section id="statusSection" class="hidden space-y-2">
       <div class="flex items-center justify-between text-xs text-slate-600 bg-white border border-slate-200/90 rounded-xl px-4 py-2.5 shadow-xs">
@@ -189,6 +242,85 @@
     let currentRawMarkdown = '';
     let timerInterval = null;
     let startTime = 0;
+
+    const STEP_IDS = [
+      'step_parse',
+      'step_diagnosis',
+      'step_innovation',
+      'step_grant_check',
+      'step_synthesis'
+    ];
+
+    let completedStepsCount = 0;
+
+    function resetStepper() {
+      completedStepsCount = 0;
+      const stepperSection = document.getElementById('stepperSection');
+      const stepperSummary = document.getElementById('stepperSummary');
+      stepperSection.classList.remove('hidden');
+      stepperSummary.textContent = '0/5 ukończono';
+
+      const defaultDescs = {
+        step_parse: 'Parsowanie koncepcji',
+        step_diagnosis: 'Kwerenda 51 badań',
+        step_innovation: 'Dobór z 114 modeli',
+        step_grant_check: 'Dystans wektorowy',
+        step_synthesis: 'Gemini 3.8 Flash'
+      };
+
+      STEP_IDS.forEach((id, idx) => {
+        const node = document.getElementById(`step-node-${id}`);
+        if (!node) return;
+        node.className = 'step-card border border-slate-200 rounded-xl p-2.5 bg-slate-50/60 transition-all flex flex-col justify-between' + (id === 'step_synthesis' ? ' col-span-2 sm:col-span-1' : '');
+        const badge = node.querySelector('.step-badge');
+        if (badge) {
+          badge.className = 'step-badge w-5 h-5 rounded-full bg-slate-200 text-slate-600 text-[11px] font-semibold flex items-center justify-center shrink-0';
+          badge.textContent = `${idx + 1}`;
+        }
+        const desc = node.querySelector('.step-desc');
+        if (desc) {
+          desc.className = 'step-desc text-[11px] text-slate-400 mt-1 truncate';
+          desc.textContent = defaultDescs[id];
+        }
+      });
+    }
+
+    function setStepActive(stepId, customDesc) {
+      const node = document.getElementById(`step-node-${stepId}`);
+      if (!node) return;
+      node.className = 'step-card border-blue-400 bg-blue-50/70 shadow-xs ring-1 ring-blue-300 rounded-xl p-2.5 transition-all flex flex-col justify-between' + (stepId === 'step_synthesis' ? ' col-span-2 sm:col-span-1' : '');
+      const badge = node.querySelector('.step-badge');
+      if (badge) {
+        badge.className = 'step-badge w-5 h-5 rounded-full bg-blue-600 text-white text-[11px] font-semibold flex items-center justify-center shrink-0 animate-pulse';
+      }
+      const desc = node.querySelector('.step-desc');
+      if (desc) {
+        desc.className = 'step-desc text-[11px] text-blue-600 font-medium mt-1 truncate';
+        if (customDesc) desc.textContent = customDesc;
+        else desc.textContent = 'W toku...';
+      }
+    }
+
+    function setStepComplete(stepId, customSummary) {
+      const node = document.getElementById(`step-node-${stepId}`);
+      if (!node) return;
+      if (!node.classList.contains('border-emerald-300')) {
+        completedStepsCount = Math.min(5, completedStepsCount + 1);
+        document.getElementById('stepperSummary').textContent = `${completedStepsCount}/5 ukończono`;
+      }
+      node.className = 'step-card border-emerald-300 bg-emerald-50/50 rounded-xl p-2.5 transition-all flex flex-col justify-between' + (stepId === 'step_synthesis' ? ' col-span-2 sm:col-span-1' : '');
+      const badge = node.querySelector('.step-badge');
+      if (badge) {
+        badge.className = 'step-badge w-5 h-5 rounded-full bg-emerald-600 text-white text-[11px] font-semibold flex items-center justify-center shrink-0';
+        badge.textContent = '✓';
+      }
+      const desc = node.querySelector('.step-desc');
+      if (desc) {
+        desc.className = 'step-desc text-[11px] text-emerald-700 font-medium mt-1 truncate';
+        if (customSummary) desc.textContent = customSummary;
+        else desc.textContent = 'Ukończono';
+      }
+    }
 
     // Presets
     document.querySelectorAll('.preset-btn').forEach(btn => {
@@ -254,6 +386,7 @@
       const scoreBadge = document.getElementById('scoreBadge');
       const markdownOutput = document.getElementById('markdownOutput');
 
+      resetStepper();
       statusSection.classList.remove('hidden');
       dossierSection.classList.remove('hidden');
       thoughtContainer.innerHTML = '';
@@ -334,16 +467,29 @@
       if (!matchType || !matchData) return;
 
       const type = matchType[1];
-      let data = {};
-      try { data = JSON.parse(matchData[1]); } catch(e) { return; }
+      let envelope = {};
+      try { envelope = JSON.parse(matchData[1]); } catch(e) { return; }
 
+      const payload = envelope.payload || envelope;
+      const stepId = envelope.step_id || payload.step_id || (payload.phase_index !== undefined ? STEP_IDS[payload.phase_index] : null);
       const statusText = document.getElementById('statusText');
 
       if (type === 'step_start') {
-        const title = data.title || '';
+        const title = payload.title || '';
         if (title) statusText.textContent = title + '...';
+        if (stepId) setStepActive(stepId, title);
+      } else if (type === 'step_complete') {
+        if (stepId) {
+          const summary = payload.summary || (payload.matches_count !== undefined ? `${payload.matches_count} trafień` : 'Ukończono');
+          setStepComplete(stepId, summary);
+        }
+      } else if (type === 'tool_result') {
+        if (stepId && payload.summary) {
+          const desc = document.querySelector(`#step-node-${stepId} .step-desc`);
+          if (desc) desc.textContent = payload.summary;
+        }
       } else if (type === 'thought') {
-        const thoughtText = data.thought || data.delta || '';
+        const thoughtText = payload.thought || payload.delta || '';
         if (thoughtText) {
           const div = document.createElement('div');
           div.textContent = `> ${thoughtText}`;
@@ -351,7 +497,7 @@
           thoughtContainer.scrollTop = thoughtContainer.scrollHeight;
         }
       } else if (type === 'rating_matrix') {
-        const sc = data.scorecard || data;
+        const sc = payload.scorecard || payload;
         if (sc) {
           const scoreBadge = document.getElementById('scoreBadge');
           const grantSubtitle = document.getElementById('grantSubtitle');
@@ -367,10 +513,11 @@
           scoreBadge.classList.remove('hidden');
         }
       } else if (type === 'final_markdown_delta') {
-        currentRawMarkdown += data.delta;
+        currentRawMarkdown += (payload.delta || '');
         renderMarkdown(currentRawMarkdown);
       } else if (type === 'agent_complete') {
         statusText.textContent = 'Dossier gotowe';
+        STEP_IDS.forEach(id => setStepComplete(id));
       }
     }
 
@@ -383,19 +530,42 @@
       const sleep = ms => new Promise(r => setTimeout(r, ms));
       const statusText = document.getElementById('statusText');
 
+      // Krok 1: Założenia
+      setStepActive('step_parse', 'Parsowanie założeń...');
+      await sleep(350);
+      handleSseEvent(`event: thought\ndata: {"step_id": "step_parse", "payload": {"thought": "Zidentyfikowano zgłoszenie: '${query.slice(0,80)}...'. Teren: powiat ${powiat}, Wnioskodawca: ${applicantType}."}}`);
+      setStepComplete('step_parse', 'Założenia przetworzone');
+
+      // Krok 2: Diagnoza ROPS
+      setStepActive('step_diagnosis', 'Kwerenda 51 raportów...');
       statusText.textContent = 'Wyszukiwanie dowodów w 51 raportach ROPS...';
-      handleSseEvent(`event: thought\ndata: {"thought": "Przeszukiwanie 15 104 chunków z raportów ROPS dla powiatu ${powiat}..."}`);
-      await sleep(500);
+      handleSseEvent(`event: thought\ndata: {"step_id": "step_diagnosis", "payload": {"thought": "Przeszukiwanie 15 104 chunków z raportów ROPS dla powiatu ${powiat}..."}}`);
+      await sleep(400);
+      setStepComplete('step_diagnosis', '3 cytowania ROPS');
 
+      // Krok 3: Baza Innowacji
+      setStepActive('step_innovation', 'Dobór z bazy 114 modeli...');
       statusText.textContent = 'Dobór innowacji z bazy 114 modeli ROPS...';
-      handleSseEvent(`event: thought\ndata: {"thought": "Dopasowano model innowacji: Przenośne modularne łazienki (100% zgodności tematycznej)"}`);
-      await sleep(500);
+      handleSseEvent(`event: thought\ndata: {"step_id": "step_innovation", "payload": {"thought": "Dopasowano model referencyjny innowacji społecznej ROPS."}}`);
+      await sleep(400);
+      setStepComplete('step_innovation', 'Dopasowano model');
 
-      statusText.textContent = 'Weryfikacja naboru Usługa Wrażliwa II...';
-      handleSseEvent(`event: rating_matrix\ndata: {"total_wtd": "97.0", "grade": "Klasa A (Maksymalny potencjał)"}`);
-      handleSseEvent(`event: thought\ndata: {"thought": "Obliczono WTD: 97.0/100 (EAS: 33.5/35, UVI: 24.0/25, TNB: 19.5/20)"}`);
-      await sleep(500);
+      // Krok 4: Nabór i Grant
+      setStepActive('step_grant_check', 'Weryfikacja naboru...');
+      statusText.textContent = 'Weryfikacja naboru i odległości matematycznej...';
+      const isDementia = query.toLowerCase().includes('demencj') || query.toLowerCase().includes('zegarek');
+      if (isDementia) {
+        handleSseEvent(`event: rating_matrix\ndata: {"step_id": "step_grant_check", "payload": {"scorecard": {"total_wtd": "84.8", "diagnostic_subtotal": "84.8", "grade": "Bardzo wysoka trafność diagnostyczna / Wymagany nabór otwarty", "is_grant_matched": false}}}`);
+        handleSseEvent(`event: thought\ndata: {"step_id": "step_grant_check", "payload": {"thought": "Dystans wektorowy (1.00) > progu 0.46. Usługa Wrażliwa II nie obejmuje tej domeny. Fokus: Diagnoza, innowacja wszywek, Agent Justification i alternatywne źródła."}}`);
+      } else {
+        handleSseEvent(`event: rating_matrix\ndata: {"step_id": "step_grant_check", "payload": {"scorecard": {"total_wtd": "97.0", "grade": "Klasa A (Maksymalny potencjał)", "is_grant_matched": true}}}`);
+        handleSseEvent(`event: thought\ndata: {"step_id": "step_grant_check", "payload": {"thought": "Wysoka zbieżność wektorowa (dystans 0.38 <= 0.46). Kwalifikowalny w naborze Usługa Wrażliwa II (do 600 000 zł, 100% dofinansowania)."}}`);
+      }
+      await sleep(400);
+      setStepComplete('step_grant_check', isDementia ? 'Inny nabór' : 'Zgodny z naborem');
 
+      // Krok 5: Synteza Dossier
+      setStepActive('step_synthesis', 'Gemini 3.8 Flash...');
       statusText.textContent = 'Generowanie dossier aplikacyjnego (Gemini 3.8 Flash)...';
 
       const fullDossier = `# Dossier Wniosku o Grant: Usługa Wrażliwa – II Nabór
@@ -518,6 +688,7 @@ Wnioskodawca (**${applicantType}**) spełnia wszystkie kluczowe wymogi Działani
         renderMarkdown(currentRawMarkdown);
         await sleep(70);
       }
+      setStepComplete('step_synthesis', 'Dossier gotowe');
     }
   </script>
 </body>

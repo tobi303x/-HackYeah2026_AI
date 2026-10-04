@@ -577,11 +577,29 @@ def generate_agent_stream(validated_input: AgentEvaluateInput) -> Generator[str,
             {"id": "step_parse", "title": "Parsowanie koncepcji i założeń"},
             {"id": "step_diagnosis", "title": "Wyszukiwanie dowodów w raportach ROPS"},
             {"id": "step_innovation", "title": "Dobór innowacji z bazy 114 modeli"},
-            {"id": "step_grant_check", "title": "Weryfikacja aktywnego grantu (Usługa Wrażliwa II)"},
+            {"id": "step_grant_check", "title": "Weryfikacja naboru i odległości"},
             {"id": "step_synthesis", "title": "Synteza strategii i wniosku grantowego"}
         ]
     })
-    time.sleep(0.3)
+    time.sleep(0.15)
+
+    # Step 1: Parse
+    step_id = "step_parse"
+    yield emit("step_start", {
+        "title": "Parsowanie koncepcji i założeń",
+        "description": "Identyfikacja problemu, grupy docelowej i typu wnioskodawcy...",
+        "phase_index": 0
+    }, step_id=step_id)
+    time.sleep(0.15)
+    yield emit("thought", {
+        "delta": f"Przetwarzanie zgłoszenia: '{validated_input.query[:100]}...'. Wnioskodawca: {validated_input.applicant_type or 'JST / NGO'}, Powiat: {validated_input.powiat or 'Małopolska'}."
+    }, step_id=step_id)
+    yield emit("step_complete", {
+        "status": "completed",
+        "duration_ms": 150,
+        "summary": "Założenia przetworzone"
+    }, step_id=step_id)
+    time.sleep(0.15)
 
     # 2. Step: Diagnosis
     step_id = "step_diagnosis"
