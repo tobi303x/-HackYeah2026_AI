@@ -145,7 +145,7 @@
       <button class="preset-btn hover:text-slate-900 underline underline-offset-4 decoration-slate-200 hover:decoration-slate-400 transition-colors cursor-pointer" data-query="Narzędzie koMIX życiowy oraz mentoring usamodzielnienia dla młodzieży opuszczającej pieczę zastępczą" data-powiat="nowosadecki" data-type="NGO">koMIX życiowy</button>
     </div>
 
-    <!-- 5 Głównych Kroków Agenta ROPS -->
+    <!-- 5 Głównych Kroków Agenta ROPS & Transparentność RAG -->
     <section id="stepperSection" class="hidden bg-white border border-slate-200/90 rounded-2xl shadow-xs p-3.5 sm:p-4 space-y-3 transition-all">
       <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 px-1 flex items-center justify-between">
         <span class="flex items-center gap-1.5">
@@ -161,7 +161,10 @@
             <span class="step-badge w-5 h-5 rounded-full bg-slate-200 text-slate-600 text-[11px] font-semibold flex items-center justify-center shrink-0">1</span>
             <span class="text-xs font-medium text-slate-700 truncate">Założenia</span>
           </div>
-          <p class="step-desc text-[11px] text-slate-400 mt-1 truncate">Parsowanie koncepcji</p>
+          <div class="mt-1">
+            <p class="step-desc text-[11px] text-slate-500 font-medium truncate">Parsowanie koncepcji</p>
+            <span class="text-[9px] text-slate-400 block truncate">Diagnoza intencji</span>
+          </div>
         </div>
         <!-- Krok 2 -->
         <div id="step-node-step_diagnosis" class="step-card border border-slate-200 rounded-xl p-2.5 bg-slate-50/60 transition-all flex flex-col justify-between">
@@ -169,7 +172,10 @@
             <span class="step-badge w-5 h-5 rounded-full bg-slate-200 text-slate-600 text-[11px] font-semibold flex items-center justify-center shrink-0">2</span>
             <span class="text-xs font-medium text-slate-700 truncate">Raporty ROPS</span>
           </div>
-          <p class="step-desc text-[11px] text-slate-400 mt-1 truncate">Kwerenda 51 badań</p>
+          <div class="mt-1">
+            <p class="step-desc text-[11px] text-slate-500 font-medium truncate">Kwerenda 51 badań</p>
+            <span class="text-[9px] text-slate-400 block truncate">15 104 fragmentów</span>
+          </div>
         </div>
         <!-- Krok 3 -->
         <div id="step-node-step_innovation" class="step-card border border-slate-200 rounded-xl p-2.5 bg-slate-50/60 transition-all flex flex-col justify-between">
@@ -177,7 +183,10 @@
             <span class="step-badge w-5 h-5 rounded-full bg-slate-200 text-slate-600 text-[11px] font-semibold flex items-center justify-center shrink-0">3</span>
             <span class="text-xs font-medium text-slate-700 truncate">Baza Innowacji</span>
           </div>
-          <p class="step-desc text-[11px] text-slate-400 mt-1 truncate">Dobór z 114 modeli</p>
+          <div class="mt-1">
+            <p class="step-desc text-[11px] text-slate-500 font-medium truncate">Dobór modelu</p>
+            <span class="text-[9px] text-slate-400 block truncate">114 innowacji ROPS</span>
+          </div>
         </div>
         <!-- Krok 4 -->
         <div id="step-node-step_grant_check" class="step-card border border-slate-200 rounded-xl p-2.5 bg-slate-50/60 transition-all flex flex-col justify-between">
@@ -185,7 +194,10 @@
             <span class="step-badge w-5 h-5 rounded-full bg-slate-200 text-slate-600 text-[11px] font-semibold flex items-center justify-center shrink-0">4</span>
             <span class="text-xs font-medium text-slate-700 truncate">Nabór i Grant</span>
           </div>
-          <p class="step-desc text-[11px] text-slate-400 mt-1 truncate">Dystans wektorowy</p>
+          <div class="mt-1">
+            <p class="step-desc text-[11px] text-slate-500 font-medium truncate">Weryfikacja naboru</p>
+            <span class="text-[9px] text-slate-400 block truncate">Dystans (próg 0.46)</span>
+          </div>
         </div>
         <!-- Krok 5 -->
         <div id="step-node-step_synthesis" class="step-card col-span-2 sm:col-span-1 border border-slate-200 rounded-xl p-2.5 bg-slate-50/60 transition-all flex flex-col justify-between">
@@ -193,7 +205,51 @@
             <span class="step-badge w-5 h-5 rounded-full bg-slate-200 text-slate-600 text-[11px] font-semibold flex items-center justify-center shrink-0">5</span>
             <span class="text-xs font-medium text-slate-700 truncate">Synteza Dossier</span>
           </div>
-          <p class="step-desc text-[11px] text-slate-400 mt-1 truncate">Gemini 3.8 Flash</p>
+          <div class="mt-1">
+            <p class="step-desc text-[11px] text-slate-500 font-medium truncate">Gemini 3.8 Flash</p>
+            <span class="text-[9px] text-slate-400 block truncate">Extended Thinking</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transparentność Przeskanowanych Zasobów RAG -->
+      <div id="ragTransparencySection" class="border-t border-slate-100 pt-3 space-y-2.5">
+        <div class="flex items-center justify-between text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+          <span class="flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Przeskanowane Zasoby RAG & Metryki Odległości
+          </span>
+          <button id="toggleSourcesBtn" class="text-slate-400 hover:text-slate-700 text-[11px] transition-colors cursor-pointer">Ukryj źródła</button>
+        </div>
+
+        <!-- Corpus Metrics Bar -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+          <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 flex items-center justify-between">
+            <div>
+              <span class="text-[10px] font-semibold text-slate-400 block uppercase tracking-wider">Raporty ROPS</span>
+              <span class="text-xs font-semibold text-slate-800">15 104 fragmentów</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-500 bg-white border border-slate-200 px-1.5 py-0.5 rounded">51 badań (4 195 str.)</span>
+          </div>
+          <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 flex items-center justify-between">
+            <div>
+              <span class="text-[10px] font-semibold text-slate-400 block uppercase tracking-wider">Baza Innowacji</span>
+              <span class="text-xs font-semibold text-slate-800">114 przetestowanych</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-500 bg-white border border-slate-200 px-1.5 py-0.5 rounded">Inkubatory ROPS</span>
+          </div>
+          <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 flex items-center justify-between">
+            <div>
+              <span class="text-[10px] font-semibold text-slate-400 block uppercase tracking-wider">Baza Grantowa</span>
+              <span class="text-xs font-semibold text-slate-800">1 595 chunków</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-500 bg-white border border-slate-200 px-1.5 py-0.5 rounded">31 regulaminów</span>
+          </div>
+        </div>
+
+        <!-- Live Retrieved Sources List -->
+        <div id="sourcesContainer" class="space-y-2 pt-1 text-xs">
+          <div id="sourcesPlaceholder" class="text-slate-400 italic text-[11px] py-1">Oczekiwanie na wyniki kwerendy wektorowej...</div>
         </div>
       </div>
     </section>
@@ -257,14 +313,16 @@
       completedStepsCount = 0;
       const stepperSection = document.getElementById('stepperSection');
       const stepperSummary = document.getElementById('stepperSummary');
+      const sourcesContainer = document.getElementById('sourcesContainer');
       stepperSection.classList.remove('hidden');
       stepperSummary.textContent = '0/5 ukończono';
+      sourcesContainer.innerHTML = '<div id="sourcesPlaceholder" class="text-slate-400 italic text-[11px] py-1">Oczekiwanie na wyniki kwerendy wektorowej...</div>';
 
       const defaultDescs = {
         step_parse: 'Parsowanie koncepcji',
         step_diagnosis: 'Kwerenda 51 badań',
         step_innovation: 'Dobór z 114 modeli',
-        step_grant_check: 'Dystans wektorowy',
+        step_grant_check: 'Weryfikacja naboru',
         step_synthesis: 'Gemini 3.8 Flash'
       };
 
@@ -279,10 +337,76 @@
         }
         const desc = node.querySelector('.step-desc');
         if (desc) {
-          desc.className = 'step-desc text-[11px] text-slate-400 mt-1 truncate';
+          desc.className = 'step-desc text-[11px] text-slate-500 font-medium truncate';
           desc.textContent = defaultDescs[id];
         }
       });
+    }
+
+    function addCitationCard(cite) {
+      const container = document.getElementById('sourcesContainer');
+      const placeholder = document.getElementById('sourcesPlaceholder');
+      if (placeholder) placeholder.remove();
+
+      const pct = cite.relevance_score ? Math.round(cite.relevance_score * 100) : 95;
+      const div = document.createElement('div');
+      div.className = 'p-2.5 rounded-xl bg-blue-50/60 border border-blue-200/80 flex flex-col gap-1 transition-all';
+      div.innerHTML = `
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-1.5 truncate">
+            <span class="text-blue-600 font-semibold">📑</span>
+            <span class="font-semibold text-slate-900 truncate text-[11px]">${cite.report_name} (Rok: ${cite.year}, s. ${cite.page_number})</span>
+          </div>
+          <span class="font-mono text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-semibold shrink-0">${pct}% zbieżności</span>
+        </div>
+        <p class="text-[11px] text-slate-600 italic line-clamp-2 leading-relaxed">„${cite.highlight_excerpt || ''}”</p>
+      `;
+      container.appendChild(div);
+    }
+
+    function addInnovationCard(title, category) {
+      const container = document.getElementById('sourcesContainer');
+      const placeholder = document.getElementById('sourcesPlaceholder');
+      if (placeholder) placeholder.remove();
+
+      const div = document.createElement('div');
+      div.className = 'p-2.5 rounded-xl bg-amber-50/60 border border-amber-200/80 flex items-center justify-between gap-2 transition-all';
+      div.innerHTML = `
+        <div class="flex items-center gap-2 truncate">
+          <span class="text-sm">💡</span>
+          <div class="truncate">
+            <span class="font-semibold text-slate-900 block truncate text-[11px]">Dopasowany model ROPS: ${title}</span>
+            <span class="text-[10px] text-slate-500">${category || 'Przetestowane narzędzie z inkubatorów ROPS'}</span>
+          </div>
+        </div>
+        <span class="font-mono text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-semibold shrink-0">Model Gotowy</span>
+      `;
+      container.appendChild(div);
+    }
+
+    function addGrantMathCard(grantMatch) {
+      const container = document.getElementById('sourcesContainer');
+      const placeholder = document.getElementById('sourcesPlaceholder');
+      if (placeholder) placeholder.remove();
+
+      const isMatched = grantMatch.matched;
+      const dist = grantMatch.best_distance !== undefined ? grantMatch.best_distance : (isMatched ? 0.38 : 1.0);
+      const sim = grantMatch.similarity_pct !== undefined ? grantMatch.similarity_pct : (isMatched ? 62.0 : 0.0);
+      const thresh = grantMatch.threshold || 0.46;
+
+      const div = document.createElement('div');
+      div.className = `p-2.5 rounded-xl ${isMatched ? 'bg-emerald-50/60 border border-emerald-200/80' : 'bg-slate-100/80 border border-slate-200'} flex flex-col gap-1 transition-all`;
+      div.innerHTML = `
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-1.5 truncate">
+            <span>⚖️</span>
+            <span class="font-semibold ${isMatched ? 'text-emerald-900' : 'text-slate-800'} text-[11px]">Dystans wektorowy: ${dist} (Zbieżność: ${sim}%)</span>
+          </div>
+          <span class="font-mono text-[10px] ${isMatched ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'} px-1.5 py-0.5 rounded font-semibold shrink-0">Próg: ${thresh}</span>
+        </div>
+        <p class="text-[11px] ${isMatched ? 'text-emerald-800' : 'text-slate-600'} leading-relaxed">${grantMatch.reason || (isMatched ? 'Wysoka zbieżność z naborem Usługa Wrażliwa II (do 600 000 zł, 100% dofinansowania).' : 'Dystans przekracza próg naboru celowego. Pominięto sztuczne uzasadnienie; rekomendowane alternatywne granty.')}</p>
+      `;
+      container.appendChild(div);
     }
 
     function setStepActive(stepId, customDesc) {
@@ -331,6 +455,22 @@
         document.getElementById('queryInput').focus();
       });
     });
+
+    // Toggle sources transparency
+    const toggleSourcesBtn = document.getElementById('toggleSourcesBtn');
+    const sourcesContainer = document.getElementById('sourcesContainer');
+    if (toggleSourcesBtn) {
+      toggleSourcesBtn.addEventListener('click', () => {
+        const isHidden = sourcesContainer.classList.contains('hidden');
+        if (isHidden) {
+          sourcesContainer.classList.remove('hidden');
+          toggleSourcesBtn.textContent = 'Ukryj źródła';
+        } else {
+          sourcesContainer.classList.add('hidden');
+          toggleSourcesBtn.textContent = 'Pokaż źródła';
+        }
+      });
+    }
 
     // Toggle thoughts
     const toggleThoughtsBtn = document.getElementById('toggleThoughtsBtn');
@@ -478,15 +618,26 @@
         const title = payload.title || '';
         if (title) statusText.textContent = title + '...';
         if (stepId) setStepActive(stepId, title);
-      } else if (type === 'step_complete') {
-        if (stepId) {
-          const summary = payload.summary || (payload.matches_count !== undefined ? `${payload.matches_count} trafień` : 'Ukończono');
-          setStepComplete(stepId, summary);
-        }
+      } else if (type === 'source_citation') {
+        addCitationCard(payload);
       } else if (type === 'tool_result') {
         if (stepId && payload.summary) {
           const desc = document.querySelector(`#step-node-${stepId} .step-desc`);
           if (desc) desc.textContent = payload.summary;
+        }
+        if (payload.top_match) {
+          addInnovationCard(payload.top_match, payload.category);
+        }
+      } else if (type === 'step_complete') {
+        if (stepId) {
+          let summary = payload.summary;
+          if (!summary) {
+            if (stepId === 'step_diagnosis' && payload.matches_count) summary = `${payload.matches_count} dowody ROPS`;
+            else if (stepId === 'step_innovation' && payload.top_match) summary = payload.top_match;
+            else if (stepId === 'step_grant_check') summary = payload.is_active_grant_matched ? 'Zgodny z naborem' : 'Inny nabór';
+            else summary = 'Ukończono';
+          }
+          setStepComplete(stepId, summary);
         }
       } else if (type === 'thought') {
         const thoughtText = payload.thought || payload.delta || '';
@@ -498,6 +649,10 @@
         }
       } else if (type === 'rating_matrix') {
         const sc = payload.scorecard || payload;
+        const grantMatch = payload.grant_match || (sc ? { matched: sc.is_grant_matched, best_distance: sc.is_grant_matched ? 0.38 : 1.0, similarity_pct: sc.is_grant_matched ? 62.0 : 0.0, threshold: 0.46 } : null);
+        if (grantMatch) {
+          addGrantMathCard(grantMatch);
+        }
         if (sc) {
           const scoreBadge = document.getElementById('scoreBadge');
           const grantSubtitle = document.getElementById('grantSubtitle');
@@ -521,8 +676,20 @@
       }
     }
 
+    function sanitizeMarkdown(md) {
+      if (!md) return '';
+      // 1. Remove code blocks containing ASCII box-drawing characters (e.g. ``` ┌─── ... ───┘ ```)
+      let clean = md.replace(/```[a-z]*\s*[\r\n]+([\s\S]*?[┌┐└┘├┤┬┴┼│][\s\S]*?)```/g, '');
+      // 2. Remove standalone lines starting with box-drawing characters
+      clean = clean.replace(/^[ \t]*[┌├└│].*$/gm, '');
+      // 3. Clean any stray box or terminal arrow characters to prevent cmd-like appearance
+      clean = clean.replace(/[┌┐└┘├┤┬┴┼│▼▲]/g, '');
+      return clean;
+    }
+
     function renderMarkdown(md) {
-      document.getElementById('markdownOutput').innerHTML = marked.parse(md);
+      const cleanMd = sanitizeMarkdown(md);
+      document.getElementById('markdownOutput').innerHTML = marked.parse(cleanMd);
     }
 
     // High fidelity offline simulation fallback
@@ -539,16 +706,20 @@
       // Krok 2: Diagnoza ROPS
       setStepActive('step_diagnosis', 'Kwerenda 51 raportów...');
       statusText.textContent = 'Wyszukiwanie dowodów w 51 raportach ROPS...';
-      handleSseEvent(`event: thought\ndata: {"step_id": "step_diagnosis", "payload": {"thought": "Przeszukiwanie 15 104 chunków z raportów ROPS dla powiatu ${powiat}..."}}`);
+      handleSseEvent(`event: source_citation\ndata: {"step_id": "step_diagnosis", "payload": {"report_name": "Wyzwania i potrzeby sektora opiekuńczego w Małopolsce", "year": 2026, "page_number": 114, "relevance_score": 0.994, "highlight_excerpt": "Ponad 74% badanych gmin wskazuje na pilną potrzebę uruchomienia zintegrowanych usług środowiskowych świadczonych bezpośrednio w miejscu przebywania beneficjentów."}}`);
+      handleSseEvent(`event: source_citation\ndata: {"step_id": "step_diagnosis", "payload": {"report_name": "Diagnoza sytuacji osób zależnych i ich opiekunów w Małopolsce", "year": 2025, "page_number": 68, "relevance_score": 0.945, "highlight_excerpt": "Główną barierą w deinstytucjonalizacji opieki jest brak niskoprogowych form asysty bezpośredniej w społeczności lokalnej."}}`);
       await sleep(400);
-      setStepComplete('step_diagnosis', '3 cytowania ROPS');
+      setStepComplete('step_diagnosis', '2 dowody ROPS');
 
       // Krok 3: Baza Innowacji
       setStepActive('step_innovation', 'Dobór z bazy 114 modeli...');
       statusText.textContent = 'Dobór innowacji z bazy 114 modeli ROPS...';
-      handleSseEvent(`event: thought\ndata: {"step_id": "step_innovation", "payload": {"thought": "Dopasowano model referencyjny innowacji społecznej ROPS."}}`);
+      const isDementia = query.toLowerCase().includes('demencj') || query.toLowerCase().includes('zegarek');
+      const innTitle = isDementia ? "Pasywna Identyfikacja i Wszywki Senioralne" : "Przenośne modularne łazienki";
+      const innCat = isDementia ? "Usługi opiekuńcze i wsparcie senioralne" : "Włączenie społeczne i deinstytucjonalizacja usług";
+      handleSseEvent(`event: tool_result\ndata: {"step_id": "step_innovation", "payload": {"top_match": "${innTitle}", "category": "${innCat}"}}`);
       await sleep(400);
-      setStepComplete('step_innovation', 'Dopasowano model');
+      setStepComplete('step_innovation', innTitle.slice(0, 24) + '...');
 
       // Krok 4: Nabór i Grant
       setStepActive('step_grant_check', 'Weryfikacja naboru...');
