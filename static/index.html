@@ -282,7 +282,7 @@
           <button id="copyMdBtn" class="px-2.5 py-1 text-xs text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-lg hover:border-slate-300 transition-colors cursor-pointer">Kopiuj</button>
           <button id="sendEmailBtn" class="px-3 py-1 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-            Wyślij e-mail
+            Wyślij PDF na e-mail
           </button>
         </div>
       </div>
@@ -306,7 +306,7 @@
             </div>
             <div>
               <h3 class="text-sm font-semibold text-slate-900">Wyślij Raport i Dossier ROPS</h3>
-              <p class="text-xs text-slate-500">Wiadomość z załącznikiem .md i podsumowaniem</p>
+              <p class="text-xs text-slate-500">Wiadomość z oficjalnym dokumentem PDF i podsumowaniem</p>
             </div>
           </div>
           <button id="closeEmailModalBtn" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg transition-colors cursor-pointer">
@@ -590,7 +590,7 @@
       sendEmailBtnText.textContent = 'Wysyłanie...';
       submitSendEmailBtn.disabled = true;
       emailModalStatus.className = 'p-3 rounded-xl text-xs bg-blue-50 text-blue-800 border border-blue-200 block';
-      emailModalStatus.textContent = 'Przygotowywanie i wysyłanie raportu przez serwer pocztowy...';
+      emailModalStatus.textContent = 'Generowanie dokumentu PDF i wysyłanie przez serwer pocztowy...';
 
       const urlParams = new URLSearchParams(window.location.search);
       const apiKey = urlParams.get('api_key') || localStorage.getItem('api_key') || 'huj_dupa_cycki_2026_hack_yeah_!';
@@ -622,7 +622,7 @@
             emailModalStatus.innerHTML = `⚠️ <strong>Tryb testowy serwera</strong>: Kontener nie załadował jeszcze Twoich zmiennych SMTP. Jeśli dodałeś zmienne w Coolify, kliknij <em>Restart / Redeploy</em> w panelu Coolify, aby kontener je wczytał.`;
           } else {
             emailModalStatus.className = 'p-3 rounded-xl text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 block';
-            emailModalStatus.innerHTML = `✓ <strong>Sukces!</strong> Raport z analizą i załącznik <code>dossier_rops.md</code> zostały wysłane przez Twój serwer pocztowy na adres: <strong>${email}</strong>!`;
+            emailModalStatus.innerHTML = `✓ <strong>Sukces!</strong> Raport z analizą i załącznik <code>dossier_aplikacyjne_rops.pdf</code> zostały wysłane przez Twój serwer pocztowy na adres: <strong>${email}</strong>!`;
           }
           sendEmailBtnText.textContent = data.mock ? 'Zakończono (test)' : '✓ Wysłano';
           sendEmailBtnSpinner.classList.add('hidden');
@@ -630,7 +630,7 @@
           setTimeout(() => {
             closeEmailModal();
             const orig = sendEmailBtn.innerHTML;
-            sendEmailBtn.innerHTML = data.mock ? `✓ Test e-mail` : `✓ Wysłano e-mail`;
+            sendEmailBtn.innerHTML = data.mock ? `✓ Test e-mail` : `✓ Wysłano PDF`;
             setTimeout(() => sendEmailBtn.innerHTML = orig, 3000);
           }, 2400);
         } else {
