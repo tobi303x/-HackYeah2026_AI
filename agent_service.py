@@ -660,16 +660,22 @@ def generate_agent_stream(validated_input: AgentEvaluateInput) -> Generator[str,
     inn_time = time.time() - t0_inn
 
     top_inn_name = innovations[0]["metadata"].get("title") if innovations else "Brak bezpośredniego modelu"
+    top_inn_cat = innovations[0]["metadata"].get("category_name", "Innowacja Społeczna") if innovations else ""
     yield emit("tool_result", {
         "tool_name": "retrieve_innovations",
         "matches_count": len(innovations),
         "top_match": top_inn_name,
-        "summary": f"Wyłoniono {len(innovations)} innowacji społecznych pasujących do profilu problemu."
+        "category": top_inn_cat,
+        "summary": f"Dopasowano model: {top_inn_name}" if innovations else "Brak modelu"
     }, step_id=step_id)
 
     yield emit("step_complete", {
         "status": "completed",
-        "duration_ms": int(inn_time * 1000)
+        "duration_ms": int(inn_time * 1000),
+        "matches_count": len(innovations),
+        "top_match": top_inn_name,
+        "category": top_inn_cat,
+        "summary": f"Dopasowano: {top_inn_name[:28]}..." if innovations else "Brak modelu"
     }, step_id=step_id)
     time.sleep(0.2)
 
@@ -734,7 +740,10 @@ def generate_agent_stream(validated_input: AgentEvaluateInput) -> Generator[str,
         "duration_ms": int(grt_time * 1000),
         "is_active_grant_matched": grant_match["matched"],
         "grant_distance": grant_match["best_distance"],
-        "grant_title": "Usługa Wrażliwa - II Nabór" if grant_match["matched"] else "Brak kwalifikowalności w Usłudze Wrażliwej II"
+        "similarity_pct": grant_match["similarity_pct"],
+        "threshold": grant_match["threshold"],
+        "grant_title": "Usługa Wrażliwa - II Nabór" if grant_match["matched"] else "Alternatywne nabory (IWS / PFRON / CUS)",
+        "summary": f"Dystans: {grant_match['best_distance']} ({'Zgodny' if grant_match['matched'] else 'Inny nabór'})"
     }, step_id=step_id)
     time.sleep(0.2)
 
@@ -778,14 +787,23 @@ Usługa Wrażliwa - II Nabór (FEM 6.23), dofinansowanie 100% do 600 000 zł, wk
 
 Napisz raport w formacie Markdown zawierający dokładnie 7 sekcji:
 1. Karta Oceny i Rating Empiryczny Pomysłu (tabela ze wskaźnikami WTD, EAS, UVI, TNB, IFS, GEP)
-2. Pogłębiona Diagnoza Społeczna z Raportów ROPS (cytaty, numery stron, dane statystyczne)
+2. Pogłębiona Diagnoza Społeczna z Raportów ROPS (cytaty, numery stron, dane statystyczne z badań)
 3. Dopasowany Model Innowacji Społecznej (opis modelu, procedur, gotowych narzędzi)
 4. Zgodność z Regulaminem Grantowym i Kartą Oceny Merytorycznej (tabela kryteriów formalnych i punktowych)
 5. Triada Realizacyjna Projektu ROPS (Filar I: Merytoryka 480k, Filar II: Promocja WCAG 2.1 20k, Filar III: Zarządzanie i SRPS 100k)
 6. Zadaniowy Kosztorys Kwalifikowalny (tabela z podziałem do 600 000 zł)
 7. 18-Miesięczna Mapa Drogowa i Checklista Wnioskodawcy (Faza I przygotowanie, Faza II świadczenie min. 12 m-cy).
 
-WAŻNE: Wszystkie informacje muszą być samowystarczalne. Zero przekierowań do innych stron. Użyj alertów GitHub (> [!NOTE], > [!TIP]).
+BEZWZGLĘDNE ZASADY FORMATOWANIA I CZYTELNOŚCI (ZERO ASCII / CMD GRAPHS):
+- KATEGORYCZNY ZAKAZ generowania jakichkolwiek wykresów tekstowych ASCII, ramek ze znaków terminalowych (takich jak ┌, ─, │, └, ┴, ┬, ┼, ▼, ▲, ├, ┤). Nie używaj bloków kodu do rysowania drzewek ani diagramów cmd!
+- Wszystkie podziały procentowe i budżetowe (w tym Triadę ROPS i kosztorys) przedstawiaj WYŁĄCZNIE jako standardowe, czytelne tabele Markdown (| Filar | Alokacja PLN | Udział % | Główne Działania |) oraz nagłówki i listy punktowane.
+- Używaj nowoczesnych alertów GitHub (> [!NOTE], > [!TIP], > [!IMPORTANT]). Raport ma wyglądać jak profesjonalny, estetyczny dokument analityczny, a nie terminal cmd.
+
+WYMÓG PRECYZJI I WYCZERPUJĄCEJ SZCZEGÓŁOWOŚCI (PRECISE BUT NOT TOO SHORT):
+- Raport musi być merytorycznie pogłębiony, precyzyjny i wyczerpujący – nie twórz lakonicznych ani skrótowych notatek.
+- Podaj konkretne wskaźniki liczbowe, estymowaną liczbę uczestników, liczbę godzin asystentury/wsparcia, wykaz kwalifikacji personelu oraz konkretne narzędzia z bazy ROPS.
+- W diagnozie zacytuj dokładne liczby i wnioski z raportów regionalnych ROPS wraz ze wskazaniem tytułu badania, roku i strony.
+- Zero zewnętrznych przekierowań URL – wszystkie dane muszą być widoczne bezpośrednio w raporcie.
 """
             else:
                 prompt_context = f"""
@@ -807,7 +825,7 @@ STATUS KWALIFIKOWALNOŚCI GRANTOWEJ:
 Brak zgodności z aktywnym naborem 'Usługa Wrażliwa - II Nabór' (dystans wektorowy: {grant_match['best_distance']} > progu {grant_match['threshold']}).
 Aktywny nabór celowy finansuje ściśle 5 modeli i nie obejmuje tej domeny.
 KATEGORYCZNIE NIE PISZ wniosku pod Usługę Wrażliwą II ani nie twórz budżetu 600 tys. zł na ten nabór!
-Skup się na rzetelnej analizie merytorycznej:
+Skup się na rzetelnej analizie merytorycznej w 6 sekcjach:
 1. Karta Oceny i Rating Empiryczny Pomysłu (podkreśl bardzo wysoki potencjał merytoryczny {rating_matrix['diagnostic_subtotal']}/90 pkt oraz formalny brak zgodności z tym zamkniętym konkursem)
 2. Pogłębiona Diagnoza Społeczna z Raportów ROPS (zacytuj twarde dowody, strony i liczby z rops_reports)
 3. Dopasowany Model Innowacji Społecznej (przedstaw gotowe narzędzie z bazy 114 innowacji ROPS)
@@ -815,7 +833,13 @@ Skup się na rzetelnej analizie merytorycznej:
 5. Operacyjny Plan Wdrożenia Rozwiązania (etapy pilotażu, współpraca z OPS/CUS, bezpieczeństwo beneficjentów)
 6. Rekomendowane Ścieżki Finansowania i Alternatywne Granty (wyjaśnij brak kwalifikowalności w Usłudze Wrażliwej II i wskaż właściwe fundusze: otwarte nabory Inkubatora Włączenia Społecznego, PFRON, programy senioralne CUS, otwarte konkursy EFS+).
 
-WAŻNE: Wszystkie informacje muszą być samowystarczalne. Zero przekierowań do innych stron. Użyj alertów GitHub (> [!NOTE], > [!TIP]).
+BEZWZGLĘDNE ZASADY FORMATOWANIA I CZYTELNOŚCI (ZERO ASCII / CMD GRAPHS):
+- KATEGORYCZNY ZAKAZ generowania jakichkolwiek wykresów tekstowych ASCII, ramek ze znaków terminalowych (np. ┌, ─, │, └, ┴, ┬, ┼, ▼, ▲, ├, ┤). Nie używaj bloków kodu do rysowania wykresów cmd!
+- Wszystkie zestawienia przedstawiaj WYŁĄCZNIE jako standardowe tabele Markdown, alerty GitHub (> [!NOTE], > [!TIP]) oraz czytelne listy punktowane.
+
+WYMÓG PRECYZJI I WYCZERPUJĄCEJ SZCZEGÓŁOWOŚCI (PRECISE BUT NOT TOO SHORT):
+- Raport musi być merytorycznie pogłębiony, precyzyjny i bogaty w argumentację. Rozwiń każdy punkt uzasadnienia eksperckiego (Agent Justification), uwzględniając bariery psychologiczne, społeczne, koszty i alternatywne źródła.
+- Zero zewnętrznych przekierowań URL – wszystkie dane muszą być widoczne bezpośrednio w raporcie.
 """
             model_name = getattr(config, "GEMINI_GENERATION_MODEL", "gemini-3.8-flash")
             thinking_lvl = getattr(config, "GEMINI_THINKING_LEVEL", "high")
