@@ -724,7 +724,6 @@
       // Krok 4: Nabór i Grant
       setStepActive('step_grant_check', 'Weryfikacja naboru...');
       statusText.textContent = 'Weryfikacja naboru i odległości matematycznej...';
-      const isDementia = query.toLowerCase().includes('demencj') || query.toLowerCase().includes('zegarek');
       if (isDementia) {
         handleSseEvent(`event: rating_matrix\ndata: {"step_id": "step_grant_check", "payload": {"scorecard": {"total_wtd": "84.8", "diagnostic_subtotal": "84.8", "grade": "Bardzo wysoka trafność diagnostyczna / Wymagany nabór otwarty", "is_grant_matched": false}}}`);
         handleSseEvent(`event: thought\ndata: {"step_id": "step_grant_check", "payload": {"thought": "Dystans wektorowy (1.00) > progu 0.46. Usługa Wrażliwa II nie obejmuje tej domeny. Fokus: Diagnoza, innowacja wszywek, Agent Justification i alternatywne źródła."}}`);
